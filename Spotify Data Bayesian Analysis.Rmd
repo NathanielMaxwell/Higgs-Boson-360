@@ -16,7 +16,36 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-Not_skipped_tracks <- read_csv("tf_0_reduced.csv")
-Skipped_tracks <- read_csv("tf_1_reduced.csv")
+Not_skipped_tracks <- data.frame(read_csv("data/tf_0_reduced.csv"))
+Skipped_tracks <- data.frame(read_csv("data/tf_1_reduced.csv"))
+All_tracks <- data.frame(read_csv("data/tf_reduced.csv"))
 ```
+```{r}
+ggplot(data = All_tracks, aes(x = us_popularity_estimate)) +
+  geom_histogram()
+ggplot(data = All_tracks, aes(x = tempo)) +
+  geom_histogram()
+ggplot(data = All_tracks, aes(x = energy)) +
+  geom_histogram()
+ggplot(data = All_tracks, aes(x = valence)) +
+  geom_histogram()
+ggplot(data = All_tracks, aes(x = danceability)) +
+  geom_histogram()
+ggplot(data = All_tracks, aes(x = acousticness)) +
+  geom_histogram()
+ggplot(data = All_tracks, aes(x = loudness)) +
+  geom_histogram()
+ggplot(data = All_tracks, aes(x = bounciness)) +
+  geom_histogram()
+ggplot(data = All_tracks, aes(x = beat_strength)) +
+  geom_histogram()
+ggplot(data = All_tracks, aes(x = duration)) +
+  geom_histogram()
+ggplot(data = All_tracks, aes(x = instrumental)) +
+  geom_histogram()
+ggplot(data = All_tracks, aes(x = liveness)) +
+  geom_histogram()
+```
+
+
 
