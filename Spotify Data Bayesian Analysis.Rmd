@@ -20,3 +20,29 @@ require(HSAUR3)
 ggplot2::theme_set(ggplot2::theme_bw())
 knitr::opts_chunk$set(fig.align = 'center')
 ```
+
+```{r}
+Logs <- data.frame(read_csv("data/log_sample_reduced.csv"))
+Tracks <- data.frame(read_csv("data/tf_sample_1.csv"))
+Append <- data.frame(read_csv("data/tf_sample_2.csv"))
+```
+
+
+```{r}
+Tracks$bounciness <- Append$bounciness
+Tracks$danceability <- Append$danceability
+Tracks$energy <- Append$energy
+Tracks$instrumentalness <- Append$instrumentalness
+Tracks$mode <- Append$mode
+Tracks$speechiness <- Append$speechiness
+Tracks$tempo <- Append$tempo
+Tracks$valence <- Append$valence
+```
+
+```{r}
+Tracks
+
+```
+
+
+
