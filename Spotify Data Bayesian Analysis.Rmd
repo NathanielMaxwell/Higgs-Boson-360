@@ -16,6 +16,7 @@ require(bayesplot)
 require(caret)
 library(rstan)
 require(HSAUR3)
+library(dplyr)
 #
 ggplot2::theme_set(ggplot2::theme_bw())
 knitr::opts_chunk$set(fig.align = 'center')
@@ -39,12 +40,6 @@ Tracks$tempo <- Append$tempo
 Tracks$valence <- Append$valence
 ```
 
-```{r}
-Tracks
-```
-```{r}
-Logs
-```
 
 ```{r}
 Tracks.bool <- Tracks
@@ -59,10 +54,9 @@ for (i in 33236:50704) {
 }
 Leftover <- Tracks.bool[-vect,]
 Tracks.final <- rbind(Tracks.bool, Leftover)
-Tracks.final
 ```
 
-```{r}
+```{r, Combining Data, cache = TRUE}
 for (i in 1:length(Logs$track_id_clean)) {
   x <- Logs$track_id_clean[[i]]
   y <- which(Tracks$track_id == x)
@@ -76,17 +70,103 @@ for (i in 1:length(Logs$track_id_clean)) {
 ```
 
 ```{r}
-Tracks.final
+Tracks.final$skipped <- as.factor(Tracks.final$skipped)
+Track_features <- Tracks.final[Tracks.final$release_year >= 2010,]
+Track_features <- Track_features[Track_features$speechiness <= 0.7,]
+Track_features <- Track_features[Track_features$instrumentalness <= 0.6,]
+Track_features <- Track_features[Track_features$duration <= 360,]
 ```
+
+
 ```{r}
-Logs
+ggplot(data = Track_features, aes(x = duration)) +
+  geom_histogram()
+ggplot(data = Track_features, aes(x = us_popularity_estimate)) +
+  geom_histogram()
+ggplot(data = Track_features, aes(x = acousticness)) +
+  geom_histogram()
+ggplot(data = Track_features, aes(x = beat_strength)) +
+  geom_histogram()
+ggplot(data = Track_features, aes(x = bounciness)) +
+  geom_histogram()
+ggplot(data = Track_features, aes(x = danceability)) +
+  geom_histogram()
+ggplot(data = Track_features, aes(x = energy)) +
+  geom_histogram()
+ggplot(data = Track_features, aes(x = instrumentalness)) +
+  geom_histogram()
+ggplot(data = Track_features, aes(x = mode)) +
+  geom_bar()
+ggplot(data = Track_features, aes(x = speechiness)) +
+  geom_histogram()
+ggplot(data = Track_features, aes(x = tempo)) +
+  geom_histogram()
+ggplot(data = Track_features, aes(x = valence)) +
+  geom_histogram()
+ggplot(data = Track_features, aes(x = skipped)) +
+  geom_bar()
+```
+
+```{r}
+ggplot(Track_features, aes(skipped, duration)) + geom_boxplot()
+ggplot(Track_features, aes(skipped, us_popularity_estimate)) + geom_boxplot()
+ggplot(Track_features, aes(skipped, acousticness)) + geom_boxplot()
+ggplot(Track_features, aes(skipped, beat_strength)) + geom_boxplot()
+ggplot(Track_features, aes(skipped, bounciness)) + geom_boxplot()
+ggplot(Track_features, aes(skipped, danceability)) + geom_boxplot()
+ggplot(Track_features, aes(skipped, energy)) + geom_boxplot()
+ggplot(Track_features, aes(skipped, instrumentalness)) + geom_boxplot()
+ggplot(Track_features, aes(skipped, speechiness)) + geom_boxplot()
+ggplot(Track_features, aes(skipped, tempo)) + geom_boxplot()
+ggplot(Track_features, aes(skipped, valence)) + geom_boxplot()
 ```
 
 
 
+```{r}
+set.seed(1)
+a <- sample.int(length(Track_features$track_id), 1000)
+Track_features_a <- Track_features[a,]
+Track_features_a <- Track_features_a[2:15]
+Track_features_a <- Track_features_a[-c(2)]
+Track_features_a
+```
 
 
+```{r, cache = TRUE}
+seed <- 1
+posterior1 <- stan_glm(skipped ~ duration , data = Track_features_a,
+                 family = binomial(link = "logit"), 
+                 prior = normal(0,1), prior_intercept = normal(0,1),
+                 seed = seed,
+                 refresh = 0)
 
+summary(posterior1)
+```
+
+
+```{r, eval = F}
+launch_shinystan(posterior1)
+```
+
+```{r, cache = T}
+mcmc_areas(as.matrix(posterior1), prob = 0.90, prob_outer = 1)
+round(coef(posterior1), 3)
+round(posterior_interval(posterior1, prob = 0.90), 3)
+```
+```{r, cache = T}
+(loo1 <- loo(posterior1, save_psis = TRUE))
+```
+
+```{r, cache = T}
+post0 <- stan_glm(skipped ~ 1, data = Track_features_a,
+                 family = binomial(link = "logit"), 
+                 prior = normal(0,1), prior_intercept = normal(0,1),
+                 seed = seed,
+                 refresh = 0)
+(loo0 <- loo(post0, save_psis = T))
+rstanarm::loo_compare(loo0, loo1)
+```
 
 
 
