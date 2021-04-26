@@ -41,8 +41,52 @@ Tracks$valence <- Append$valence
 
 ```{r}
 Tracks
-
 ```
+```{r}
+Logs
+```
+
+```{r}
+Tracks.bool <- Tracks
+Tracks.bool$skipped <- rep(1, length(Tracks$track_id))
+c <- rep(1,length(Tracks$track_id))
+for (i in 1:length(Tracks$track_id)) {
+  c[i] <- i
+}
+vect <- rep(1,17468)
+for (i in 33236:50704) {
+  vect[i-33235] <- i
+}
+Leftover <- Tracks.bool[-vect,]
+Tracks.final <- rbind(Tracks.bool, Leftover)
+Tracks.final
+```
+
+```{r}
+for (i in 1:length(Logs$track_id_clean)) {
+  x <- Logs$track_id_clean[[i]]
+  y <- which(Tracks$track_id == x)
+  bool <- 1
+  if (Logs$not_skipped[[i]] == TRUE) {
+    bool <- 0
+  }
+  z <- cbind(Tracks[y,], skipped = bool)
+  Tracks.final[i,] <- z
+}
+```
+
+```{r}
+Tracks.final
+```
+```{r}
+Logs
+```
+
+
+
+
+
+
 
 
 
