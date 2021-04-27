@@ -72,7 +72,7 @@ for (i in 1:length(Logs$track_id_clean)) {
 ```{r}
 Tracks.final$skipped <- as.factor(Tracks.final$skipped)
 Track_features <- Tracks.final[Tracks.final$release_year >= 2010,]
-Track_features <- Track_features[Track_features$speechiness <= 0.7,]
+Track_features <- Track_features[Track_features$speechiness <= 0.4,]
 Track_features <- Track_features[Track_features$instrumentalness <= 0.6,]
 Track_features <- Track_features[Track_features$duration <= 360,]
 ```
@@ -124,19 +124,19 @@ ggplot(Track_features, aes(skipped, valence)) + geom_boxplot()
 
 
 ```{r}
-set.seed(1)
+set.seed(4)
 a <- sample.int(length(Track_features$track_id), 1000)
 Track_features_a <- Track_features[a,]
 Track_features_a <- Track_features_a[2:15]
-Track_features_a <- Track_features_a[-c(2)]
+Track_features_a <- Track_features_a[-c(2)] 
 ```
 
 
 ```{r, cache = TRUE}
 seed <- 1
-posterior1 <- stan_glm(skipped ~ duration , data = Track_features_a,
+posterior1 <- stan_glm(skipped ~ ., data = Track_features_a,
                  family = binomial(link = "logit"), 
-                 prior = normal(0,1), prior_intercept = normal(0,1),
+                 prior = normal(0,2), prior_intercept = normal(0,1),
                  seed = seed,
                  refresh = 0)
 
