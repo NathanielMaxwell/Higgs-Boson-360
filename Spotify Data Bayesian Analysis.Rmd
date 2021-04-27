@@ -129,7 +129,6 @@ a <- sample.int(length(Track_features$track_id), 1000)
 Track_features_a <- Track_features[a,]
 Track_features_a <- Track_features_a[2:15]
 Track_features_a <- Track_features_a[-c(2)]
-Track_features_a
 ```
 
 
