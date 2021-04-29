@@ -210,7 +210,9 @@ a9=ggplot(data = spotify1, aes(x = danceability)) +
   geom_histogram()
 a9=ggplot(data = spotify1, aes(x = energy)) +
   geom_histogram()
-grid.arrange(a1, a2, a3, a4, a5, a6, a7, a8, a9,  nrow=2)
+a10=ggplot(data = spotify1, aes(x = target)) +
+  geom_bar()
+grid.arrange(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,  nrow=2)
 ```
 
 
@@ -235,7 +237,7 @@ round(coef(post2), 3)
 round(posterior_interval(post2, prob = 0.90), 3)
 ```
 ```{r, cache = T}
-(loo1 <- loo(post2, save_psis = TRUE))
+(loo3 <- loo(post2, save_psis = TRUE))
 ```
 
 ```{r, cache = T}
@@ -244,6 +246,23 @@ post4 <- stan_glm(target ~ 1, data = spotify1,
                  prior = normal(0,1), prior_intercept = normal(0,1),
                  seed = seed,
                  refresh = 0)
-(loo0 <- loo(post4, save_psis = T))
-rstanarm::loo_compare(loo0, loo1)
+(loo2 <- loo(post4, save_psis = T))
+rstanarm::loo_compare(loo2, loo3)
 ```
+
+```{r}
+preds <- posterior_linpred(post2, transform = TRUE)
+pred <- colMeans(preds)
+```
+
+```{r}
+pr <- as.integer(pred >= 0.5)
+# have the students calculate this themselves?
+round(mean(xor(pr,as.integer(spotify1$target == 0))),3)
+```
+
+```{r, cache = TRUE}
+ploo = E_loo(preds, loo3$psis_object, type="mean", log_ratios = -log_lik(post2))$value
+round(mean(xor(ploo>0.5,as.integer(spotify1$target==0))),3)
+```
+
