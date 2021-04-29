@@ -1,0 +1,249 @@
+---
+title: "Spotify Data Bayesian Analysis"
+author: "Nathaniel Maxwell, Jessie Bierschenk"
+output: pdf_document
+---
+
+```{r setup, message=F, warning=F, echo=F}
+#
+require(tidyverse)
+require(rstanarm)
+require(magrittr)
+library(tidyverse)
+library(ggplot2)
+require(loo)
+require(bayesplot)
+require(caret)
+library(rstan)
+require(HSAUR3)
+library(dplyr)
+library(gridExtra)
+#
+ggplot2::theme_set(ggplot2::theme_bw())
+knitr::opts_chunk$set(fig.align = 'center')
+```
+
+```{r}
+Logs <- data.frame(read_csv("data/log_sample_reduced.csv"))
+Tracks <- data.frame(read_csv("data/tf_sample_1.csv"))
+Append <- data.frame(read_csv("data/tf_sample_2.csv"))
+```
+
+
+```{r}
+Tracks$bounciness <- Append$bounciness
+Tracks$danceability <- Append$danceability
+Tracks$energy <- Append$energy
+Tracks$instrumentalness <- Append$instrumentalness
+Tracks$mode <- Append$mode
+Tracks$speechiness <- Append$speechiness
+Tracks$tempo <- Append$tempo
+Tracks$valence <- Append$valence
+```
+
+
+```{r}
+Tracks.bool <- Tracks
+Tracks.bool$skipped <- rep(1, length(Tracks$track_id))
+c <- rep(1,length(Tracks$track_id))
+for (i in 1:length(Tracks$track_id)) {
+  c[i] <- i
+}
+vect <- rep(1,17468)
+for (i in 33236:50704) {
+  vect[i-33235] <- i
+}
+Leftover <- Tracks.bool[-vect,]
+Tracks.final <- rbind(Tracks.bool, Leftover)
+```
+
+```{r, Combining Data, cache = TRUE}
+for (i in 1:length(Logs$track_id_clean)) {
+  x <- Logs$track_id_clean[[i]]
+  y <- which(Tracks$track_id == x)
+  bool <- 1
+  if (Logs$not_skipped[[i]] == TRUE) {
+    bool <- 0
+  }
+  z <- cbind(Tracks[y,], skipped = bool)
+  Tracks.final[i,] <- z
+}
+```
+
+```{r}
+Tracks.final$skipped <- as.factor(Tracks.final$skipped)
+Track_features <- Tracks.final[Tracks.final$release_year >= 2010,]
+Track_features <- Track_features[Track_features$speechiness <= 0.4,]
+Track_features <- Track_features[Track_features$instrumentalness <= 0.6,]
+Track_features <- Track_features[Track_features$duration <= 360,]
+```
+
+
+```{r}
+p1= ggplot(data = Track_features, aes(x = duration)) +
+  geom_histogram()
+p2= ggplot(data = Track_features, aes(x = us_popularity_estimate)) +
+  geom_histogram()
+p3= ggplot(data = Track_features, aes(x = acousticness)) +
+  geom_histogram()
+p4= ggplot(data = Track_features, aes(x = beat_strength)) +
+  geom_histogram()
+p5= ggplot(data = Track_features, aes(x = bounciness)) +
+  geom_histogram()
+p6=ggplot(data = Track_features, aes(x = danceability)) +
+  geom_histogram()
+p7= ggplot(data = Track_features, aes(x = energy)) +
+  geom_histogram()
+p8=ggplot(data = Track_features, aes(x = instrumentalness)) +
+  geom_histogram()
+p9=ggplot(data = Track_features, aes(x = mode)) +
+  geom_bar()
+p10=ggplot(data = Track_features, aes(x = speechiness)) +
+  geom_histogram()
+p11= ggplot(data = Track_features, aes(x = tempo)) +
+  geom_histogram()
+p12=ggplot(data = Track_features, aes(x = valence)) +
+  geom_histogram()
+p13=ggplot(data = Track_features, aes(x = skipped)) +
+  geom_bar()
+
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,p11, p12, p13, nrow=2)
+```
+
+```{r}
+g1= ggplot(Track_features, aes(skipped, duration)) + geom_boxplot()
+g2=ggplot(Track_features, aes(skipped, us_popularity_estimate)) + geom_boxplot()
+g3=ggplot(Track_features, aes(skipped, acousticness)) + geom_boxplot()
+g4=ggplot(Track_features, aes(skipped, beat_strength)) + geom_boxplot()
+g5=ggplot(Track_features, aes(skipped, bounciness)) + geom_boxplot()
+g6=ggplot(Track_features, aes(skipped, danceability)) + geom_boxplot()
+g7=ggplot(Track_features, aes(skipped, energy)) + geom_boxplot()
+g8=ggplot(Track_features, aes(skipped, instrumentalness)) + geom_boxplot()
+g9=ggplot(Track_features, aes(skipped, speechiness)) + geom_boxplot()
+g10=ggplot(Track_features, aes(skipped, tempo)) + geom_boxplot()
+g11=ggplot(Track_features, aes(skipped, valence)) + geom_boxplot()
+
+grid.arrange(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,g11,  nrow=2)
+```
+
+
+
+```{r}
+set.seed(4)
+a <- sample.int(length(Track_features$track_id), 1000)
+Track_features_a <- Track_features[a,]
+Track_features_a <- Track_features_a[2:15]
+Track_features_a <- Track_features_a[-c(2)] 
+```
+
+
+```{r, cache = TRUE}
+seed <- 1
+posterior1 <- stan_glm(skipped ~ ., data = Track_features_a,
+                 family = binomial(link = "logit"), 
+                 prior = normal(0,1), prior_intercept = normal(0,1),
+                 seed = seed,
+                 refresh = 0)
+
+summary(posterior1)
+```
+
+
+```{r, eval = F}
+launch_shinystan(posterior1)
+```
+
+```{r, cache = T}
+mcmc_areas(as.matrix(posterior1), prob = 0.90, prob_outer = 1)
+round(coef(posterior1), 3)
+round(posterior_interval(posterior1, prob = 0.90), 3)
+```
+```{r, cache = T}
+(loo1 <- loo(posterior1, save_psis = TRUE))
+```
+
+```{r, cache = T}
+post0 <- stan_glm(skipped ~ 1, data = Track_features_a,
+                 family = binomial(link = "logit"), 
+                 prior = normal(0,1), prior_intercept = normal(0,1),
+                 seed = seed,
+                 refresh = 0)
+(loo0 <- loo(post0, save_psis = T))
+rstanarm::loo_compare(loo0, loo1)
+```
+
+###New Data
+```{r}
+spotify <- data.frame(read_csv("data/spotify.csv"))
+#View(spotify)
+```
+```{r}
+#Drop un-needed variables
+spotify1 <- spotify[-c(1,16,17)]
+#View(spotify1)
+spotify1$target <- factor(spotify1$target)
+spotify1$mode <- factor(spotify1$mode)
+spotify1$key <- factor(spotify1$key)
+spotify1 <- spotify1 %>% 
+   mutate(duration_ms = duration_ms / 1000)
+```
+
+```{r}
+#EDA
+a1= ggplot(data = spotify1, aes(x = duration_ms)) +
+  geom_histogram()
+a2= ggplot(data = spotify1, aes(x = instrumentalness)) +
+  geom_histogram()
+a3= ggplot(data = spotify1, aes(x = liveness)) +
+  geom_histogram()
+a4= ggplot(data = spotify1, aes(x = loudness)) +
+  geom_histogram()
+a5= ggplot(data = spotify1, aes(x = speechiness)) +
+  geom_histogram()
+a6=ggplot(data = spotify1, aes(x = tempo)) +
+  geom_histogram()
+a7= ggplot(data = spotify1, aes(x = valence)) +
+  geom_histogram()
+a8=ggplot(data = spotify1, aes(x = acousticness)) +
+  geom_histogram()
+a9=ggplot(data = spotify1, aes(x = danceability)) +
+  geom_histogram()
+a9=ggplot(data = spotify1, aes(x = energy)) +
+  geom_histogram()
+grid.arrange(a1, a2, a3, a4, a5, a6, a7, a8, a9,  nrow=2)
+```
+
+
+```{r}
+seed=1
+post2 <- stan_glm(target ~ ., data = spotify1,
+                 family = binomial(link = "logit"), 
+                 prior = normal(0,1), prior_intercept = normal(0,1),
+                 seed = seed,
+                 refresh = 0)
+
+summary(post2)
+```
+
+```{r, eval = F}
+launch_shinystan(post2)
+```
+
+```{r, cache = T}
+mcmc_areas(as.matrix(post2), prob = 0.90, prob_outer = 1)
+round(coef(post2), 3)
+round(posterior_interval(post2, prob = 0.90), 3)
+```
+```{r, cache = T}
+(loo1 <- loo(post2, save_psis = TRUE))
+```
+
+```{r, cache = T}
+post4 <- stan_glm(target ~ 1, data = spotify1,
+                 family = binomial(link = "logit"), 
+                 prior = normal(0,1), prior_intercept = normal(0,1),
+                 seed = seed,
+                 refresh = 0)
+(loo0 <- loo(post4, save_psis = T))
+rstanarm::loo_compare(loo0, loo1)
+```
