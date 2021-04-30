@@ -15,6 +15,7 @@ library(ggplot2)
 require(loo)
 require(bayesplot)
 require(caret)
+library(leaps)
 library(rstan)
 require(HSAUR3)
 library(dplyr)
@@ -145,7 +146,7 @@ Two datasets were utilized during this analysis.
 
 
 \subsection{Model Selection}
-For the first dataset, we wanted to estimate the values of the coefficients $\boldsymbol{\beta}$ for each of the variables to find out how they impact whether or not a track is skipped. We are assuming little knowledge about each variable's effect, so we propose a weakly informative prior for $[\boldsymbol{\beta}]$: Using recommendations from Gelman, Jakulin, Pittau, and Su, we use a cauchy(0,2.5) prior for each scaled variable (we scaled the variables). Our response variable, $\textbf{y}$, will follow a logistic regression model, where 1 means the track was skipped. This is equivalent to the Bernoulli distribution $\textbf{y}|\theta \sim Bern(\theta)$. We will use the logit link, where $logit(\theta) = \eta$, and $\eta = \textbf{x}^T\boldsymbol{\beta}$, where $\textbf{x}$ is the covariate space for $textbf{Y}$. Using the rstanarm package, Rstudio will compute the posterior and draw MCMC samples from the posterior distribution $[\boldsymbol{\beta}|$\textbf{Y}$, $\textbf{X}$].
+For the first dataset, we wanted to estimate the values of the coefficients $\boldsymbol{\beta}$ for each of the variables to find out how they impact whether or not a track is skipped. We are assuming little knowledge about each variable's effect, so we propose a weakly informative prior for $[\boldsymbol{\beta}]$: Using recommendations from Gelman, Jakulin, Pittau, and Su, we use a cauchy(0,2.5) prior for each scaled variable (we scaled the variables). Our response variable, $\textbf{y}$, will follow a logistic regression model, where 1 means the track was skipped. This is equivalent to the Bernoulli distribution $\textbf{y}|\theta \sim Bern(\theta)$. We will use the logit link, where $logit(\theta) = \eta$, and $\eta = \textbf{x}^T\boldsymbol{\beta}$, where $\textbf{x}$ is the covariate space for $textbf{Y}$. Using the rstanarm package, Rstudio will compute the posterior and draw MCMC samples from the posterior distribution $[\boldsymbol{\beta}|$\textbf{Y}$, $\textbf{X}$]. 
 
 
 
@@ -201,7 +202,7 @@ grid.arrange(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,g11,  nrow=2)
 ```
 
 
-
+\section{Posterior Estimates}
 ```{r, echo=FALSE}
 set.seed(4)
 a <- sample.int(length(Track_features$track_id), 1000)
@@ -221,35 +222,61 @@ posterior1 <- stan_glm(skipped ~ ., data = Track_features_a,
 ```
 
 
-```{r, eval = F, echo=FALSE}
-launch_shinystan(posterior1)
-```
-
 ```{r, cache = T, echo=FALSE}
 mcmc_areas(as.matrix(posterior1), prob = 0.90, prob_outer = 1)
-round(coef(posterior1), 3)
 round(posterior_interval(posterior1, prob = 0.90), 3)
 ```
 
-```{r, cache = T}
+```{r, cache = T, echo=FALSE}
 (loo1 <- loo(posterior1, save_psis = TRUE))
 ```
 
-```{r, cache = T, echo=TRUE}
-post0 <- stan_glm(skipped ~ 1, data = Track_features_a,
+```{r, cache = T, echo=FALSE}
+posterior0 <- stan_glm(skipped ~ 1, data = Track_features_a,
                  family = binomial(link = "logit"), 
-                 prior = normal(0,1), prior_intercept = normal(0,1),
+                 prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
                  seed = seed,
                  refresh = 0)
-(loo0 <- loo(post0, save_psis = T))
+(loo0 <- loo(posterior0, save_psis = T))
 rstanarm::loo_compare(loo0, loo1)
+```
+After running the rstanarm function and including all of the variables, we see that there is only variable whose 90% confidence interval does not include 0. That variable is duration, and furthermore, when calculating the 'leave-one-out' cross-validation information criterion (looic), we see that this model actually has a $\textit{higher}$  value than the looic of a baseline model with no predictors. In other words, our model is worse at predicting whether or not a song is skipped than if someone randomly guessed! Therefore, we will drop all variables that were not deemed significant at a 90% confidence interval (included 0 in their posterior interval), and rerun the model. In this case, 'duration' is the only variable remaining.
+
+```{r}
+posterior2 <- stan_glm(skipped ~ duration, data = Track_features_a,
+                 family = binomial(link = "logit"), 
+                 prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                 seed = seed,
+                 refresh = 0)
+(loo2 <- loo(posterior2, save_psis = TRUE))
+rstanarm::loo_compare(loo0, loo2)
+mcmc_areas(as.matrix(posterior2), prob = 0.90, prob_outer = 1)
+round(posterior_interval(posterior2, prob = 0.90), 3)
+```
+
+This model proved to be better, but not by much. Furthermore, the p
+
+```{r, echo=FALSE}
+preds2 <- posterior_linpred(posterior2, transform = TRUE)
+pred2 <- colMeans(preds2)
+```
+```{r, echo=FALSE, cache = TRUE}
+pr2 <- as.integer(pred2 >= 0.5)
+# have the students calculate this themselves?
+round(mean(xor(pr2,as.integer(Track_features_a$skipped == 0))),3)
+```
+
+```{r, cache = TRUE, echo=FALSE}
+ploo2 = E_loo(preds2, loo2$psis_object, type="mean", log_ratios = -log_lik(posterior2))$value
+round(mean(xor(ploo2 > 0.5,as.integer(Track_features_a$skipped==0))),3)
 ```
 
 ###New Data
-```{r, echo=FALSE, cache = TRUE}
+```{r, echo=FALSE, cache = TRUE, message=FALSE, warning=FALSE}
 spotify <- data.frame(read_csv("data/spotify.csv"))
 #View(spotify)
 ```
+
 ```{r}
 #Drop un-needed variables
 spotify1 <- spotify[-c(1,16,17)]
@@ -259,7 +286,17 @@ spotify1$mode <- factor(spotify1$mode)
 spotify1$key <- factor(spotify1$key)
 spotify1 <- spotify1 %>% 
    mutate(duration_ms = duration_ms / 1000)
-
+# scale the covariates for easier comparison of coefficient posteriors
+spotify1$acousticness <- scale(spotify1$acousticness)
+spotify1$danceability <- scale(spotify1$danceability)
+spotify1$duration_ms <- scale(spotify1$duration_ms)
+spotify1$energy <- scale(spotify1$energy)
+spotify1$instrumentalness <- scale(spotify1$instrumentalness)
+spotify1$liveness <- scale(spotify1$liveness)
+spotify1$loudness <- scale(spotify1$loudness)
+spotify1$speechiness <- scale(spotify1$speechiness)
+spotify1$tempo <- scale(spotify1$tempo)
+spotify1$valence <- scale(spotify1$valence)
 ```
 
 ```{r, echo=FALSE, cache=TRUE}
@@ -293,52 +330,52 @@ grid.arrange(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,  nrow=2)
 
 ```{r, cache = TRUE, echo = FALSE}
 seed=1
-post2 <- stan_glm(target ~ ., data = spotify1,
+posterior3 <- stan_glm(target ~ ., data = spotify1,
                  family = binomial(link = "logit"), 
-                 prior = normal(0,1), prior_intercept = normal(0,1),
+                 prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
                  seed = seed,
                  refresh = 0)
 
-summary(post2)
+summary(posterior3)
 ```
 
 ```{r, eval = F, echo = FALSE}
-launch_shinystan(post2)
+launch_shinystan(posterior3)
 ```
 
 ```{r, cache = T, echo=FALSE}
-mcmc_areas(as.matrix(post2), prob = 0.90, prob_outer = 1)
-round(coef(post2), 3)
-round(posterior_interval(post2, prob = 0.90), 3)
+mcmc_areas(as.matrix(posterior3), prob = 0.90, prob_outer = 1)
+round(coef(posterior3), 3)
+round(posterior_interval(posterior3, prob = 0.90), 3)
 ```
 ```{r, cache = T}
-(loo3 <- loo(post2, save_psis = TRUE))
+(loo3 <- loo(posterior3, save_psis = TRUE))
 ```
 
 
 ```{r, cache = T, echo=FALSE}
-post4 <- stan_glm(target ~ 1, data = spotify1,
+posterior4 <- stan_glm(target ~ 1, data = spotify1,
                  family = binomial(link = "logit"), 
                  prior = normal(0,1), prior_intercept = normal(0,1),
                  seed = seed,
                  refresh = 0)
-(loo2 <- loo(post4, save_psis = T))
-rstanarm::loo_compare(loo2, loo3)
+(loo4 <- loo(posterior4, save_psis = T))
+rstanarm::loo_compare(loo3, loo4)
 ```
 
 ```{r, echo=FALSE}
-preds <- posterior_linpred(post2, transform = TRUE)
-pred <- colMeans(preds)
+preds3 <- posterior_linpred(posterior3, transform = TRUE)
+pred3 <- colMeans(preds3)
 ```
 
 ```{r, echo=FALSE, cache = TRUE}
-pr <- as.integer(pred >= 0.5)
+pr3 <- as.integer(pred3 >= 0.5)
 # have the students calculate this themselves?
-round(mean(xor(pr,as.integer(spotify1$target == 0))),3)
+round(mean(xor(pr3,as.integer(spotify1$target == 0))),3)
 ```
 
 ```{r, cache = TRUE, echo=FALSE}
-ploo = E_loo(preds, loo3$psis_object, type="mean", log_ratios = -log_lik(post2))$value
-round(mean(xor(ploo>0.5,as.integer(spotify1$target==0))),3)
+ploo3 = E_loo(preds3, loo3$psis_object, type="mean", log_ratios = -log_lik(posterior3))$value
+round(mean(xor(ploo3>0.5,as.integer(spotify1$target==0))),3)
 ```
 
