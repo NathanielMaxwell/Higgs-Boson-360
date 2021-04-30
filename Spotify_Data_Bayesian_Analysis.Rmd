@@ -79,6 +79,18 @@ Track_features <- Tracks.final[Tracks.final$release_year >= 2010,]
 Track_features <- Track_features[Track_features$speechiness <= 0.4,]
 Track_features <- Track_features[Track_features$instrumentalness <= 0.6,]
 Track_features <- Track_features[Track_features$duration <= 360,]
+# scale the covariates for easier comparison of coefficient posteriors
+Track_features$us_popularity_estimate <- scale(Track_features$us_popularity_estimate)
+Track_features$duration <- scale(Track_features$duration)
+Track_features$acousticness <- scale(Track_features$acousticness)
+Track_features$beat_strength <- scale(Track_features$beat_strength)
+Track_features$bounciness <- scale(Track_features$bounciness)
+Track_features$danceability <- scale(Track_features$danceability)
+Track_features$energy <- scale(Track_features$energy)
+Track_features$instrumentalness <- scale(Track_features$instrumentalness)
+Track_features$speechiness <- scale(Track_features$speechiness)
+Track_features$tempo <- scale(Track_features$tempo)
+Track_features$valence <- scale(Track_features$valence)
 ```
 
 \section{Introduction}
@@ -133,7 +145,7 @@ Two datasets were utilized during this analysis.
 
 
 \subsection{Model Selection}
-For the first dataset, we wanted to find estimated coefficients for each of the variables to find out how they impact whether or not a track is skipped. We can write the coefficients in the following way: $/beta_1  $
+For the first dataset, we wanted to estimate the values of the coefficients $\boldsymbol{\beta}$ for each of the variables to find out how they impact whether or not a track is skipped. We are assuming little knowledge about each variable's effect, so we propose a weakly informative prior for $[\boldsymbol{\beta}]$: Using recommendations from Gelman, Jakulin, Pittau, and Su, we use a cauchy(0,2.5) prior for each scaled variable. Our response variable, $\textbf{Y}$, will follow a logistic regression model, where 1 means the track was skipped. This is equivalent to the Bernoulli distribution $\textbf{Y}|\theta \sim Bern(\theta)$, where $logit(\theta) = \eta$, and $\eta = \textbf{x}^T\boldsymbol{\beta}$, where $\textbf{x}$ is the covariate space for $textbf{Y}$.
 
 
 
@@ -170,7 +182,7 @@ p13=ggplot(data = Track_features, aes(x = skipped)) +
 grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,p11, p12, p13, nrow=2)
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.show='hide'}
 g1= ggplot(Track_features, aes(skipped, duration)) + geom_boxplot()
 g2=ggplot(Track_features, aes(skipped, us_popularity_estimate)) + geom_boxplot()
 g3=ggplot(Track_features, aes(skipped, acousticness)) + geom_boxplot()
@@ -201,11 +213,9 @@ Track_features_a <- Track_features_a[-c(2)]
 seed <- 1
 posterior1 <- stan_glm(skipped ~ ., data = Track_features_a,
                  family = binomial(link = "logit"), 
-                 prior = normal(0,1), prior_intercept = normal(0,1),
+                 prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
                  seed = seed,
                  refresh = 0)
-
-summary(posterior1)
 ```
 
 
@@ -218,6 +228,7 @@ mcmc_areas(as.matrix(posterior1), prob = 0.90, prob_outer = 1)
 round(coef(posterior1), 3)
 round(posterior_interval(posterior1, prob = 0.90), 3)
 ```
+
 ```{r, cache = T}
 (loo1 <- loo(posterior1, save_psis = TRUE))
 ```
