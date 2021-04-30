@@ -18,19 +18,21 @@ library(rstan)
 require(HSAUR3)
 library(dplyr)
 library(gridExtra)
+library(corrplot)
+library(projpred)
 #
 ggplot2::theme_set(ggplot2::theme_bw())
 knitr::opts_chunk$set(fig.align = 'center')
 ```
 
-```{r}
+```{r, echo=FALSE}
 Logs <- data.frame(read_csv("data/log_sample_reduced.csv"))
 Tracks <- data.frame(read_csv("data/tf_sample_1.csv"))
 Append <- data.frame(read_csv("data/tf_sample_2.csv"))
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 Tracks$bounciness <- Append$bounciness
 Tracks$danceability <- Append$danceability
 Tracks$energy <- Append$energy
@@ -42,7 +44,7 @@ Tracks$valence <- Append$valence
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 Tracks.bool <- Tracks
 Tracks.bool$skipped <- rep(1, length(Tracks$track_id))
 c <- rep(1,length(Tracks$track_id))
@@ -57,7 +59,7 @@ Leftover <- Tracks.bool[-vect,]
 Tracks.final <- rbind(Tracks.bool, Leftover)
 ```
 
-```{r, Combining Data, cache = TRUE}
+```{r, Combining Data, cache = TRUE, echo=FALSE}
 for (i in 1:length(Logs$track_id_clean)) {
   x <- Logs$track_id_clean[[i]]
   y <- which(Tracks$track_id == x)
@@ -186,6 +188,7 @@ spotify1$mode <- factor(spotify1$mode)
 spotify1$key <- factor(spotify1$key)
 spotify1 <- spotify1 %>% 
    mutate(duration_ms = duration_ms / 1000)
+
 ```
 
 ```{r}
@@ -216,6 +219,7 @@ grid.arrange(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,  nrow=2)
 ```
 
 
+
 ```{r}
 seed=1
 post2 <- stan_glm(target ~ ., data = spotify1,
@@ -239,6 +243,7 @@ round(posterior_interval(post2, prob = 0.90), 3)
 ```{r, cache = T}
 (loo3 <- loo(post2, save_psis = TRUE))
 ```
+
 
 ```{r, cache = T}
 post4 <- stan_glm(target ~ 1, data = spotify1,
