@@ -1,6 +1,7 @@
 ---
-title: "Spotify Data Bayesian Analysis"
+title: "A Bayesian Analysis of Spotify Data "
 author: "Nathaniel Maxwell, Jessie Bierschenk"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
 ---
 
@@ -25,7 +26,7 @@ ggplot2::theme_set(ggplot2::theme_bw())
 knitr::opts_chunk$set(fig.align = 'center')
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, results=FALSE, results='hide', message=FALSE, warning=FALSE}
 Logs <- data.frame(read_csv("data/log_sample_reduced.csv"))
 Tracks <- data.frame(read_csv("data/tf_sample_1.csv"))
 Append <- data.frame(read_csv("data/tf_sample_2.csv"))
@@ -72,7 +73,7 @@ for (i in 1:length(Logs$track_id_clean)) {
 }
 ```
 
-```{r}
+```{r, echo=FALSE}
 Tracks.final$skipped <- as.factor(Tracks.final$skipped)
 Track_features <- Tracks.final[Tracks.final$release_year >= 2010,]
 Track_features <- Track_features[Track_features$speechiness <= 0.4,]
@@ -80,8 +81,65 @@ Track_features <- Track_features[Track_features$instrumentalness <= 0.6,]
 Track_features <- Track_features[Track_features$duration <= 360,]
 ```
 
+\section{Introduction}
+For many musicians, the art of composing/performing/marketing a new song is an arduous process. Even after all the work has been completed and a song is ready to be played to the public, the biggest uncertainty still awaits: How will the song be received? Will it become a hit? Will it be a song that everyone skips over, or never becomes popular? The purpose of this analysis is to investigate which characteristics of a song (such as tempo, duration, mode, acousticness, etc.) would make it more “likeable,” less likely to be skipped, or more popular. Of course, music taste is a very subjective matter, and thus, there will be quite a bit of uncertainty around any variables that are deemed important/unimportant. What one person likes; another person may dislike. Therefore, looking at such musical characteristics through a Bayesian lens will help to quantify the uncertainty surrounding any of our findings. Through this analysis we hope to provide some conclusions that an aspiring musician (or even a well-established musician) can have at their disposal when creating new music. 
 
-```{r}
+\section{Pre-Analysis}
+\subsection{Data}
+Two datasets were utilized during this analysis.
+\begin{enumerate}
+    \item The first dataset consists of 83,939 observations on Spotify of whether or not a track was skipped by users. In total, 65,417 different tracks were included in the dataset. Each track has the following characteristics:
+    \begin{enumerate}
+        \item Release Year (Year the song was released)
+        \item Duration (length of song in seconds)
+        \item US Popularity Estimate (A popularity rating of song, on a scale 1-100)
+        \item Acousticness (A confidence measure from 0-1 on whether the track is acoustic, where values near 1 represent high confidence that the track is acoustic)
+        \item Beat Strength (The strength of the beat from 0-1, where 1 represents a very strong sense of beat)
+        \item Bounciness (A rating of the bounciness from 0-1, where 1 represents a strong sense of bounciness)
+        \item Danceability (A rating from 0-1 of how suitable the track is for dancing, where values near 1 represent high suitability)
+        \item Energy (A rating from 0-1 representing a perceptual measure of intensity and activity, where values near 1 represent high energy)
+        \item Instrumentalness (A rating from 0-1 that predicts whether a track has no vocals, where values close to 1 represent high confidence that there are no vocals)
+        \item Mode (Predicts whether or not a song is major or minor)
+        \item Speechiness (A rating from 0-1 that detects the presence of spoken words in a track, with values near 1 representing an exclusively speech-like track)
+        \item Tempo (The estimated tempo of the track in Beats Per Minute (BPM))
+        \item Valence (A rating from 0-1 that represents the positivity of the song, with 1 representing high positivity)
+        \item Skipped (Denotes whether or not that particular track was skipped or played the entire way through)
+    \end{enumerate}
+    \textbf{Note}: in order to try to obtain tracks most representative of new music, only the following tracks were kept:
+    \begin{enumerate}
+        \item Tracks from 2010-present
+        \item Tracks with a speechiness value <= 0.4 (filters out tracks that are mostly spoken, such as podcasts and ebooks)
+        \item Tracks with an instrumentalness value <= 0.6 (filters out tracks that contain no vocals)
+        \item Tracks with a duration <= 360 seconds (given that the average new song is 3-5 minutes, a cutoff of 6 minutes seemed appropriate)
+    \end{enumerate}
+    \item The second dataset consisted of 2017 songs compiled by a single person, where a portion of the songs are songs that he likes, and the other portion are songs that he dislikes. This dataset includes similar variables as the first dataset, including:
+    \begin{enumerate}
+        \item Acousticness
+        \item Danceability 
+        \item Duration
+        \item Energy
+        \item Instrumentalness
+        \item Key (The particular grouping of chords and notes in a song) 
+        \item Liveness (rating from 0-1 of whether the track was performed live, with 1 representing high confidence the track was performed live)
+        \item Loudness (Overall loudness of the track in decibles (dB))
+        \item Mode
+        \item Speechiness
+        \item Tempo
+        \item Time Signature (The way in which beats of the song are organized)
+        \item Valence
+    \end{enumerate}
+\end{enumerate}
+
+
+
+\subsection{Model Selection}
+For the first dataset, we wanted to find estimated coefficients for each of the variables to find out how they impact whether or not a track is skipped. We can write the coefficients in the following way: $/beta_1  $
+
+
+
+
+
+```{r, echo=FALSE, fig.show='hide'}
 p1= ggplot(data = Track_features, aes(x = duration)) +
   geom_histogram()
 p2= ggplot(data = Track_features, aes(x = us_popularity_estimate)) +
@@ -112,7 +170,7 @@ p13=ggplot(data = Track_features, aes(x = skipped)) +
 grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,p11, p12, p13, nrow=2)
 ```
 
-```{r}
+```{r, echo=FALSE}
 g1= ggplot(Track_features, aes(skipped, duration)) + geom_boxplot()
 g2=ggplot(Track_features, aes(skipped, us_popularity_estimate)) + geom_boxplot()
 g3=ggplot(Track_features, aes(skipped, acousticness)) + geom_boxplot()
@@ -130,7 +188,7 @@ grid.arrange(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,g11,  nrow=2)
 
 
 
-```{r}
+```{r, echo=FALSE}
 set.seed(4)
 a <- sample.int(length(Track_features$track_id), 1000)
 Track_features_a <- Track_features[a,]
@@ -139,7 +197,7 @@ Track_features_a <- Track_features_a[-c(2)]
 ```
 
 
-```{r, cache = TRUE}
+```{r, cache = TRUE, echo=FALSE}
 seed <- 1
 posterior1 <- stan_glm(skipped ~ ., data = Track_features_a,
                  family = binomial(link = "logit"), 
@@ -151,11 +209,11 @@ summary(posterior1)
 ```
 
 
-```{r, eval = F}
+```{r, eval = F, echo=FALSE}
 launch_shinystan(posterior1)
 ```
 
-```{r, cache = T}
+```{r, cache = T, echo=FALSE}
 mcmc_areas(as.matrix(posterior1), prob = 0.90, prob_outer = 1)
 round(coef(posterior1), 3)
 round(posterior_interval(posterior1, prob = 0.90), 3)
@@ -164,7 +222,7 @@ round(posterior_interval(posterior1, prob = 0.90), 3)
 (loo1 <- loo(posterior1, save_psis = TRUE))
 ```
 
-```{r, cache = T}
+```{r, cache = T, echo=TRUE}
 post0 <- stan_glm(skipped ~ 1, data = Track_features_a,
                  family = binomial(link = "logit"), 
                  prior = normal(0,1), prior_intercept = normal(0,1),
@@ -175,7 +233,7 @@ rstanarm::loo_compare(loo0, loo1)
 ```
 
 ###New Data
-```{r}
+```{r, echo=FALSE, cache = TRUE}
 spotify <- data.frame(read_csv("data/spotify.csv"))
 #View(spotify)
 ```
@@ -191,7 +249,7 @@ spotify1 <- spotify1 %>%
 
 ```
 
-```{r}
+```{r, echo=FALSE, cache=TRUE}
 #EDA
 a1= ggplot(data = spotify1, aes(x = duration_ms)) +
   geom_histogram()
@@ -220,7 +278,7 @@ grid.arrange(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,  nrow=2)
 
 
 
-```{r}
+```{r, cache = TRUE, echo = FALSE}
 seed=1
 post2 <- stan_glm(target ~ ., data = spotify1,
                  family = binomial(link = "logit"), 
@@ -231,11 +289,11 @@ post2 <- stan_glm(target ~ ., data = spotify1,
 summary(post2)
 ```
 
-```{r, eval = F}
+```{r, eval = F, echo = FALSE}
 launch_shinystan(post2)
 ```
 
-```{r, cache = T}
+```{r, cache = T, echo=FALSE}
 mcmc_areas(as.matrix(post2), prob = 0.90, prob_outer = 1)
 round(coef(post2), 3)
 round(posterior_interval(post2, prob = 0.90), 3)
@@ -245,7 +303,7 @@ round(posterior_interval(post2, prob = 0.90), 3)
 ```
 
 
-```{r, cache = T}
+```{r, cache = T, echo=FALSE}
 post4 <- stan_glm(target ~ 1, data = spotify1,
                  family = binomial(link = "logit"), 
                  prior = normal(0,1), prior_intercept = normal(0,1),
@@ -255,18 +313,18 @@ post4 <- stan_glm(target ~ 1, data = spotify1,
 rstanarm::loo_compare(loo2, loo3)
 ```
 
-```{r}
+```{r, echo=FALSE}
 preds <- posterior_linpred(post2, transform = TRUE)
 pred <- colMeans(preds)
 ```
 
-```{r}
+```{r, echo=FALSE, cache = TRUE}
 pr <- as.integer(pred >= 0.5)
 # have the students calculate this themselves?
 round(mean(xor(pr,as.integer(spotify1$target == 0))),3)
 ```
 
-```{r, cache = TRUE}
+```{r, cache = TRUE, echo=FALSE}
 ploo = E_loo(preds, loo3$psis_object, type="mean", log_ratios = -log_lik(post2))$value
 round(mean(xor(ploo>0.5,as.integer(spotify1$target==0))),3)
 ```
