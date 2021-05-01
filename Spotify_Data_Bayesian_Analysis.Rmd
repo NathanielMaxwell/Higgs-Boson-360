@@ -150,12 +150,13 @@ Here are the descriptors of variables for the two datasets.
         \item Valence (A rating from 0-1 that represents the positivity of the song, with 1 representing high positivity)
         \item Skipped (Denotes whether or not that particular track was skipped or played the entire way through)
     \end{enumerate}
-    \textbf{Note}: in order to try to obtain tracks most representative of new music, only the following tracks were kept (total of 65,417 observations kept):
+    \textbf{Note}: In order to try to obtain tracks most representative of new music, only the following tracks were kept (total of 65,417 observations kept):
     \begin{enumerate}
         \item Tracks from 2010-present
         \item Tracks with a speechiness value <= 0.4 (filters out tracks that are mostly spoken, such as podcasts and ebooks)
         \item Tracks with an instrumentalness value <= 0.6 (filters out tracks that contain no vocals)
         \item Tracks with a duration <= 360 seconds (given that the average new song is 3-5 minutes, a cutoff of 6 minutes seemed appropriate)
+        Furthermore, the variables year and track id were not utilized in the analysis, as their information provides no benefit to a songwriter.
     \end{enumerate}
     \item The second dataset consisted of 2017 songs compiled by a single person, where a portion of the songs are songs that he likes, and the other portion are songs that he dislikes. This dataset includes similar variables as the first dataset, including:
     \begin{enumerate}
@@ -181,6 +182,8 @@ Here are the descriptors of variables for the two datasets.
 For the first dataset, our response variable, $\textbf{y}$, will be modeled by a $Bernoulli(\theta)$ distribution, where 1 means the track was skipped, and 0 means the track was not skipped. To obtain the variable $\theta$, we will use the logit link, where $logit(\theta) = \eta$, and $\eta = \textbf{x}^T\boldsymbol{\beta}$, where $\textbf{x} \in \textbf{X}$ is the covariate space for $\textbf{Y}$. In other words, we are creating a logistic regression model where $\theta$ is obtained from a linear model. We can write our sampling distribution for$\textbf{y}$ as $[\textbf{y}|\theta]$, and since $\theta$ is dependent upon $\boldsymbol{\beta}$ and $\textbf{x}$, we can write this as $[\textbf{y}|\boldsymbol{\beta},\textbf{x} ]$. 
 
 What we really want is to estimate the values of the coefficients $\boldsymbol{\beta}$ for each of the variables to find out how they impact whether or not a track is skipped. In order to form a posterior estimate for $\boldsymbol{\beta}$, we must specify a prior. We assume little knowledge about each variable's effect, so we propose a weakly informative prior for $[\boldsymbol{\beta}]$: Using recommendations from Gelman, Jakulin, Pittau, and Su [7], we use a Cauchy(0,2.5) prior for each variable. Furthermore, we centered all the variables and then scaled them to have the same standard deviation, so that no variable could have a disproportionate effect on the outcome, and thus have better interpretability. Now that we have a prior model $[\boldsymbol{\beta}]$ and sampling model $[\textbf{y}|\theta]$,we can use all $\textbf{y}_i \in \textbf{Y}$ to calculate the posterior $[\boldsymbol{\beta}|\textbf{Y}, \textbf{X}]$ using Baye's Theorem and proportionality. This will not be done by hand. Instead, using the rstanarm package, Rstudio will compute the posterior and draw MCMC samples from the $[\boldsymbol{\beta}|\textbf{Y}, \textbf{X}]$. In this way we will obtain estimates for the values of $\beta_0, \beta_1,...,\beta_k \in \boldsymbol{\beta}$.
+
+Note: In order to allow efficient posterior sampling, a random sample of 5000 tracks were used.
 
 
 
@@ -234,15 +237,15 @@ grid.arrange(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,g11,  nrow=2)
 
 \section{Posterior Estimates}
 ```{r, echo=FALSE}
-set.seed(4)
-a <- sample.int(length(Track_features$track_id), 1000)
+set.seed(2)
+a <- sample.int(length(Track_features$track_id), 5000)
 Track_features_a <- Track_features[a,]
 Track_features_a <- Track_features_a[2:15]
 Track_features_a <- Track_features_a[-c(2)] 
 ```
 
 
-```{r, cache = TRUE, echo=FALSE}
+```{r, echo=FALSE, cache=TRUE}
 seed <- 1
 posterior1 <- stan_glm(skipped ~ ., data = Track_features_a,
                  family = binomial(link = "logit"), 
@@ -251,17 +254,17 @@ posterior1 <- stan_glm(skipped ~ ., data = Track_features_a,
                  refresh = 0)
 ```
 
-
-```{r, cache = T, echo=FALSE, results='hide'}
-mcmc_areas(as.matrix(posterior1), prob = 0.90, prob_outer = 1)
-round(posterior_interval(posterior1, prob = 0.90), 3)
+```{r, echo=FALSE, cache=TRUE}
+POST1 <- mcmc_areas(as.matrix(posterior1), prob = 0.95, prob_outer = 1)
+POST1
+round(posterior_interval(posterior1, prob = 0.95), 3)
 ```
 
-```{r, cache = T, echo=FALSE, message=FALSE, results='hide'}
+```{r, echo=FALSE, message=FALSE, results='hide', cache=TRUE}
 (loo1 <- loo(posterior1, save_psis = TRUE))
 ```
 
-```{r, cache = T, echo=FALSE, message=FALSE, results='hide'}
+```{r,  echo=FALSE, message=FALSE, results='hide', cache=TRUE}
 posterior0 <- stan_glm(skipped ~ 1, data = Track_features_a,
                  family = binomial(link = "logit"), 
                  prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
@@ -270,39 +273,42 @@ posterior0 <- stan_glm(skipped ~ 1, data = Track_features_a,
 (loo0 <- loo(posterior0, save_psis = T))
 rstanarm::loo_compare(loo0, loo1)
 ```
-After running the rstanarm function and including all of the variables, we see that there is only variable whose 90% confidence interval does not include 0. That variable is duration, and furthermore, when calculating the 'leave-one-out' cross-validation information criterion (looic), we see that this model actually has a $\textit{higher}$ value (1309) than the looic of a baseline model (1297) with no predictors. In other words, our model is worse at predicting whether or not a song is skipped than if someone randomly guessed! Therefore, we will drop all variables that were not deemed significant at a 90% confidence interval (included 0 in their posterior interval), and rerun the model. In this case, 'duration' is the only variable remaining.
+After running the rstanarm function and including all of the variables, we see that there is only variable whose 95% confidence interval does not include 0. That variable is duration, and furthermore, when calculating the 'leave-one-out' cross-validation information criterion (looic), we see that this model barely has a slightly lower value (6366) than the looic of a baseline model (6373) with no predictors.  To attempt to find the best model, we will drop all variables that were not deemed significant at a 95% confidence interval (included 0 in their posterior interval), and rerun the model. In this case, 'duration' is the only variable remaining.
 
-```{r, echo=FALSE,cache=TRUE, message=FALSE, results='hide'}
+```{r, echo=FALSE, results='hide', cache=TRUE}
 posterior2 <- stan_glm(skipped ~ duration, data = Track_features_a,
                  family = binomial(link = "logit"), 
                  prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
                  seed = seed,
                  refresh = 0)
+POST2 <- mcmc_areas(as.matrix(posterior2), prob = 0.95, prob_outer = 1)
+round(posterior_interval(posterior2, prob = 0.95), 3)
+```
+```{r,results='hide', message=FALSE, cache=TRUE}
 (loo2 <- loo(posterior2, save_psis = TRUE))
 rstanarm::loo_compare(loo0, loo2)
-mcmc_areas(as.matrix(posterior2), prob = 0.90, prob_outer = 1)
-round(posterior_interval(posterior2, prob = 0.90), 3)
 ```
 
-```{r, cache = TRUE, message=FALSE}
-matrix1<-as.matrix(posterior2)
-trace1 <- plot(matrix1[,2], type="l")
-ACF1 <- acf(matrix1[,2])
+
+```{r, message=FALSE, fig.show='hide', results='hide', cache=TRUE}
+matrix2<-as.matrix(posterior2)
+trace2 <- plot(matrix2[,2], type="l")
+ACF2 <- acf(matrix2[,2])
 ```
 
-This model proved to be better, with a looic value of 1293. To ensure that the MCMC samples created from the stan_glm fuction converged and mixed well, a traceplot and ACF plot confirmed that there were no problems (See appendix for graphs). To calculate our posterior predictive accuracy, we used the following method. If the posterior probability of a track being skipped is greater or equal to $0.5$, then we would predict that observation to have a value of 1 (and similarly for less than $0.5$). For each observation, we can compare the posterior prediction to the actual observed value. The proportion of times we correctly predict an individual (i.e. [prediction = 0 and observation = 0] or [prediction = 1 and observation = 1]) is our classification accuracy. In our case, the posterior classification accuracy is 0.65. While we would really want to also calculate the estimated accuracy on "unseen" data, or data that doesn't actually affect this model, because our number of observations is so large, we would expect the value to be the same when using a LOOCV, and this is indeed true: the value is still 0.65.
+This model proved to be better, with a looic value of 6358. To ensure that the MCMC samples created from the stan_glm fuction converged and mixed well, a traceplot and ACF plot confirmed that there were no problems (See appendix for graphs). To calculate our posterior predictive accuracy, we used the following method. If the posterior probability of a track being skipped is greater or equal to $0.5$, then we would predict that observation to have a value of 1 (and similarly for less than $0.5$). For each observation, we can compare the posterior prediction to the actual observed value. The proportion of times we correctly predict an individual (i.e. [prediction = 0 and observation = 0] or [prediction = 1 and observation = 1]) is our classification accuracy. In our case, the posterior classification accuracy is 0.65. While we would really want to also calculate the estimated accuracy on "unseen" data, or data that doesn't actually affect this model, because our number of observations is so large, we would expect the value to be the same when using a LOOCV, and this is indeed true: the value is still 0.65.
 
 ```{r, echo=FALSE, message=FALSE, cache=TRUE}
 preds2 <- posterior_linpred(posterior2, transform = TRUE)
 pred2 <- colMeans(preds2)
 ```
 
-```{r, echo=FALSE, cache = TRUE, message=FALSE}
+```{r, echo=FALSE, message=FALSE, results='hide', cache=TRUE}
 pr2 <- as.integer(pred2 >= 0.5)
 round(mean(xor(pr2,as.integer(Track_features_a$skipped == 0))),3)
 ```
 
-```{r, cache = TRUE, echo=FALSE, message=FALSE}
+```{r, echo=FALSE, message=FALSE, results='hide', cache=TRUE}
 ploo2 = E_loo(preds2, loo2$psis_object, type="mean", log_ratios = -log_lik(posterior2))$value
 round(mean(xor(ploo2 > 0.5,as.integer(Track_features_a$skipped==0))),3)
 ```
@@ -390,12 +396,11 @@ posterior3 <- stan_glm(target ~ ., data = spotify1,
                  seed = seed,
                  refresh = 0)
 
-summary(posterior3)
 ```
 
 
 ```{r, cache = T, echo=FALSE}
-mcmc_areas(as.matrix(posterior3), prob = 0.90, prob_outer = 1)
+POST3 <- mcmc_areas(as.matrix(posterior3), prob = 0.90, prob_outer = 1)
 round(coef(posterior3), 3)
 round(posterior_interval(posterior3, prob = 0.90), 3)
 ```
@@ -481,7 +486,7 @@ posterior4.full <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ en
                 refresh = 0)
 ```
 
-```{r, cache=TRUE, message = FALSE}
+```{r, cache=TRUE, message = FALSE, results='hide'}
 (loo4.1 <- loo(posterior4.1, save_psis = T))
 (loo4.2 <- loo(posterior4.2, save_psis = T))
 (loo4.3 <- loo(posterior4.3, save_psis = T))
@@ -496,7 +501,7 @@ posterior4.full <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ en
 (loo4.full <- loo(posterior4.full, save_psis = T))
 ```
 
-```{r, cache=TRUE}
+```{r, cache=TRUE, results='hide'}
 rstanarm::loo_compare(loo4.1, loo4.2, loo4.3, loo4.4, loo4.5, loo4.6, loo4.7, loo4.8, loo4.9, loo4.10, loo4.11, loo4.full)
 ```
 
@@ -560,7 +565,7 @@ posterior5.full <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ in
                 refresh = 0)
 ```
 
-```{r, cache=TRUE, message = FALSE}
+```{r, cache=TRUE, message = FALSE, results='hide'}
 (loo5.1 <- loo(posterior5.1, save_psis = T))
 (loo5.2 <- loo(posterior5.2, save_psis = T))
 (loo5.3 <- loo(posterior5.3, save_psis = T))
@@ -573,11 +578,12 @@ posterior5.full <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ in
 (loo5.10 <- loo(posterior5.10, save_psis = T))
 (loo5.full <- loo(posterior5.full, save_psis = T))
 ```
-```{r, cache=TRUE}
+
+```{r, cache=TRUE, results='hide'}
 rstanarm::loo_compare(loo5.1, loo5.2, loo5.3, loo5.4, loo5.5, loo5.6, loo5.7, loo5.8, loo5.9, loo5.10, loo5.full)
 ```
 
-```{r, cache=TRUE}
+```{r, cache=TRUE, results='hide'}
 posterior5.interaction <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence + valence*mode+ duration_ms*danceability+ acousticness*liveness, data = spotify1,
                 family = binomial(link = "logit"), 
                 prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
@@ -586,12 +592,13 @@ posterior5.interaction <- stan_glm(target ~ acousticness+ danceability+ duration
 
 (loo5.interaction <- loo(posterior5.interaction, save_psis = T))
 ```
-```{r, cache=TRUE}
+
+```{r, cache=TRUE,results='hide'}
 rstanarm::loo_compare(loo5.interaction, loo5.full)
 ```
 
 
-```{r, cache=TRUE}
+```{r, cache=TRUE, results='hide'}
 posterior5.interaction2 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence + duration_ms*danceability+ acousticness*liveness, data = spotify1,
                 family = binomial(link = "logit"), 
                 prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
@@ -601,11 +608,12 @@ posterior5.interaction2 <- stan_glm(target ~ acousticness+ danceability+ duratio
 (loo5.interaction2 <- loo(posterior5.interaction2, save_psis = T))
 ```
 
-```{r, cache=TRUE}
+```{r, cache=TRUE, results='hide'}
 rstanarm::loo_compare(loo5.interaction, loo5.interaction2)
 ```
+
 ```{r, cache = T, echo=FALSE}
-mcmc_areas(as.matrix(posterior5.interaction2), prob = 0.90, prob_outer = 1)
+POST5 <- mcmc_areas(as.matrix(posterior5.interaction2), prob = 0.90, prob_outer = 1)
 round(coef(posterior5.interaction2), 3)
 round(posterior_interval(posterior5.interaction2, prob = 0.90), 3)
 ```
@@ -627,62 +635,56 @@ round(mean(xor(pr5,as.integer(spotify1$target == 0))),3)
 ploo5 = E_loo(preds5, loo5.interaction2$psis_object, type="mean", log_ratios = -log_lik(posterior5.interaction2))$value
 round(mean(xor(ploo5>0.5,as.integer(spotify1$target==0))),3)
 ```
+
 ```{r, cache = TRUE, echo=FALSE}
 #acousticness
 matrix5 <- as.matrix(posterior5.interaction2)
-plot(matrix5[,2], type="l")
-acf(matrix5[,2])
+trace5.acoust <- plot(matrix5[,2], type="l")
+ACF5.acoust <- acf(matrix5[,2])
 
 #danceability
-matrix5 <- as.matrix(posterior5.interaction2)
-plot(matrix5[,3], type="l")
-acf(matrix5[,3])
+trace5.dance <- plot(matrix5[,3], type="l")
+ACF5.dance <- acf(matrix5[,3])
 
 #duration
-matrix5 <- as.matrix(posterior5.interaction2)
-plot(matrix5[,4], type="l")
-acf(matrix5[,4])
+trace5.duration <- plot(matrix5[,4], type="l")
+ACF5.duration <- acf(matrix5[,4])
 
 #instrumentalness
-matrix5 <- as.matrix(posterior5.interaction2)
-plot(matrix5[,5], type="l")
-acf(matrix5[,5])
+trace5.instru <- plot(matrix5[,5], type="l")
+ACF5.instru <- acf(matrix5[,5])
 
 #liveness
-matrix5 <- as.matrix(posterior5.interaction2)
-plot(matrix5[,5], type="l")
-acf(matrix5[,5])
+trace5.liveness <- plot(matrix5[,5], type="l")
+ACF5.liveness <- acf(matrix5[,5])
 
 #loudness
-matrix5 <- as.matrix(posterior5.interaction2)
-plot(matrix5[,7], type="l")
-acf(matrix5[,7])
+trace5.loudness <- plot(matrix5[,7], type="l")
+ACF5.loudness <- acf(matrix5[,7])
 
 #mode
-matrix5 <- as.matrix(posterior5.interaction2)
-plot(matrix5[,8], type="l")
-acf(matrix5[,8])
+trace5.mode <- plot(matrix5[,8], type="l")
+ACF5.mode <- acf(matrix5[,8])
 
 #speechness
-matrix5 <- as.matrix(posterior5.interaction2)
-plot(matrix5[,9], type="l")
-acf(matrix5[,9])
+trace5.speech <- plot(matrix5[,9], type="l")
+ACF5.speech <- acf(matrix5[,9])
 
 #tempo
-plot(matrix5[,10], type="l")
-acf(matrix5[,10])
+trace5.tempo <- plot(matrix5[,10], type="l")
+ACF5.tempo <- acf(matrix5[,10])
 
 #valence
-plot(matrix5[,11], type="l")
-acf(matrix5[,11])
+trace5.valence <- plot(matrix5[,11], type="l")
+ACF5.valence <- acf(matrix5[,11])
 
 #interaction
-plot(matrix5[,12], type="l")
-acf(matrix5[,12])
+trace5.duration.dance <- plot(matrix5[,12], type="l")
+ACF5.duration.dance <- acf(matrix5[,12])
 
 #interaction2
-plot(matrix5[,13], type="l")
-acf(matrix5[,13])
+trace5.acoust.live <- plot(matrix5[,13], type="l")
+trace5.acoust.live <- acf(matrix5[,13])
 
 ```
 
