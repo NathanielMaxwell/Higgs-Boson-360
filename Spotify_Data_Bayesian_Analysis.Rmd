@@ -264,20 +264,19 @@ mcmc_areas(as.matrix(posterior2), prob = 0.90, prob_outer = 1)
 round(posterior_interval(posterior2, prob = 0.90), 3)
 ```
 
-This model proved to be better, but not by much. Furthermore, the p
+This model proved to be better, but not by much. To calculate our posterior predictive accuracy, we used the following method. If the posterior probability of a track being skipped  is greater or equal to $0.5$, then we would predict that observation to have a value of 1 (and similarly for less than $0.5$). For each observation, we can compare the posterior prediction to the actual observed value. The proportion of times we correctly predict an individual (i.e. [prediction = 0 and observation = 0] or [prediction = 1 and observation = 1]) is our classification accuracy. In our case, the posterior classification accuracy is 0.65. While we would want to also calculate the estimated accuracy on unseen data, since our number of observations is so large, we would expect the value to be the same when using a LOOCV, and this is indeed true: the value is still 0.65.
 
 ```{r, echo=FALSE, message=FALSE}
 preds2 <- posterior_linpred(posterior2, transform = TRUE)
 pred2 <- colMeans(preds2)
 ```
 
-```{r, echo=FALSE, cache = TRUE}
+```{r, echo=FALSE, cache = TRUE, message=FALSE}
 pr2 <- as.integer(pred2 >= 0.5)
-# have the students calculate this themselves?
 round(mean(xor(pr2,as.integer(Track_features_a$skipped == 0))),3)
 ```
 
-```{r, cache = TRUE, echo=FALSE}
+```{r, cache = TRUE, echo=FALSE, message=FALSE}
 ploo2 = E_loo(preds2, loo2$psis_object, type="mean", log_ratios = -log_lik(posterior2))$value
 round(mean(xor(ploo2 > 0.5,as.integer(Track_features_a$skipped==0))),3)
 ```
@@ -291,10 +290,10 @@ spotify <- data.frame(read_csv("data/spotify.csv"))
 ```{r, echo=FALSE}
 #Drop un-needed variables
 spotify1 <- spotify[-c(1,7,16,17)]
-#View(spotify1)
+
 spotify1$target <- factor(spotify1$target)
 spotify1$mode <- factor(spotify1$mode)
-#spotify1$key <- factor(spotify1$key)
+
 spotify1 <- spotify1 %>% 
    mutate(duration_ms = duration_ms / 1000)
 # scale the covariates for easier comparison of coefficient posteriors
@@ -404,6 +403,250 @@ posterior4 <- stan_glm(target ~ 1, data = spotify1,
 rstanarm::loo_compare(loo3, loo4)
 ```
 
+
+
+```{r, cache=TRUE}
+posterior3.1 <- stan_glm(target ~ danceability+ duration_ms+ energy+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ time_signature+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior3.2 <- stan_glm(target ~ acousticness+ duration_ms+ energy+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ time_signature+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior3.3 <- stan_glm(target ~ acousticness+ danceability+ energy+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ time_signature+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior3.4 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ time_signature+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior3.5 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ liveness+ loudness+ mode+ speechiness+ tempo+ time_signature+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior3.6 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ instrumentalness+ loudness+ mode+ speechiness+ tempo+ time_signature+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior3.7 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ instrumentalness+ liveness+ mode+ speechiness+ tempo+ time_signature+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior3.8 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ instrumentalness+ liveness+ loudness+ speechiness+ tempo+ time_signature+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior3.9 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ instrumentalness+ liveness+ loudness+ mode+ tempo+ time_signature+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior3.10 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ time_signature+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior3.11 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior3.12 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ time_signature, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+```
+
+```{r, cache=TRUE, message = FALSE}
+(loo3.1 <- loo(posterior3.1, save_psis = T))
+(loo3.2 <- loo(posterior3.2, save_psis = T))
+(loo3.3 <- loo(posterior3.3, save_psis = T))
+(loo3.4 <- loo(posterior3.4, save_psis = T))
+(loo3.5 <- loo(posterior3.5, save_psis = T))
+(loo3.6 <- loo(posterior3.6, save_psis = T))
+(loo3.7 <- loo(posterior3.7, save_psis = T))
+(loo3.8 <- loo(posterior3.8, save_psis = T))
+(loo3.9 <- loo(posterior3.9, save_psis = T))
+(loo3.10 <- loo(posterior3.10, save_psis = T))
+(loo3.11 <- loo(posterior3.11, save_psis = T))
+(loo3.12 <- loo(posterior3.12, save_psis = T))
+```
+```{r, cache=TRUE}
+rstanarm::loo_compare(loo3, loo3.1, loo3.2, loo3.3, loo3.4, loo3.5, loo3.6, loo3.7, loo3.8, loo3.9, loo3.10, loo3.11, loo3.12)
+```
+```{r, cache=TRUE}
+posterior4.1 <- stan_glm(target ~ danceability+ duration_ms+ energy+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior4.2 <- stan_glm(target ~ acousticness+ duration_ms+ energy+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior4.3 <- stan_glm(target ~ acousticness+ danceability+ energy+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior4.4 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior4.5 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ liveness+ loudness+ mode+ speechiness+ tempo+  valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior4.6 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ instrumentalness+ loudness+ mode+ speechiness+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior4.7 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ instrumentalness+ liveness+ mode+ speechiness+ tempo+  valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior4.8 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ instrumentalness+ liveness+ loudness+ speechiness+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior4.9 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ instrumentalness+ liveness+ loudness+ mode+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior4.10 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior4.11 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior4.full <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+```
+
+```{r, cache=TRUE, message = FALSE}
+(loo4.1 <- loo(posterior4.1, save_psis = T))
+(loo4.2 <- loo(posterior4.2, save_psis = T))
+(loo4.3 <- loo(posterior4.3, save_psis = T))
+(loo4.4 <- loo(posterior4.4, save_psis = T))
+(loo4.5 <- loo(posterior4.5, save_psis = T))
+(loo4.6 <- loo(posterior4.6, save_psis = T))
+(loo4.7 <- loo(posterior4.7, save_psis = T))
+(loo4.8 <- loo(posterior4.8, save_psis = T))
+(loo4.9 <- loo(posterior4.9, save_psis = T))
+(loo4.10 <- loo(posterior4.10, save_psis = T))
+(loo4.11 <- loo(posterior4.11, save_psis = T))
+(loo4.full <- loo(posterior4.full, save_psis = T))
+```
+
+```{r, cache=TRUE}
+rstanarm::loo_compare(loo4.1, loo4.2, loo4.3, loo4.4, loo4.5, loo4.6, loo4.7, loo4.8, loo4.9, loo4.10, loo4.11, loo4.full)
+```
+
+
+```{r, cache=TRUE}
+posterior5.1 <- stan_glm(target ~ danceability+ duration_ms+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior5.2 <- stan_glm(target ~ acousticness+ duration_ms+  instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior5.3 <- stan_glm(target ~ acousticness+ danceability+  instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+
+posterior5.4 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ liveness+ loudness+ mode+ speechiness+ tempo+  valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior5.5 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ instrumentalness+ loudness+ mode+ speechiness+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior5.6 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+  instrumentalness+ liveness+mode+ speechiness+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior5.7 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+  instrumentalness+ liveness+ loudness+ speechiness+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior5.8 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+  instrumentalness+ liveness+ loudness+ mode+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior5.9 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+  instrumentalness+ liveness+ loudness+ mode+ speechiness+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior5.10 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+  instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+posterior5.full <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence, data = spotify1,
+                family = binomial(link = "logit"), 
+                prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+                seed = seed,
+                refresh = 0)
+```
+
+```{r, cache=TRUE, message = FALSE}
+(loo5.1 <- loo(posterior5.1, save_psis = T))
+(loo5.2 <- loo(posterior5.2, save_psis = T))
+(loo5.3 <- loo(posterior5.3, save_psis = T))
+(loo5.4 <- loo(posterior5.4, save_psis = T))
+(loo5.5 <- loo(posterior5.5, save_psis = T))
+(loo5.6 <- loo(posterior5.6, save_psis = T))
+(loo5.7 <- loo(posterior5.7, save_psis = T))
+(loo5.8 <- loo(posterior5.8, save_psis = T))
+(loo5.9 <- loo(posterior5.9, save_psis = T))
+(loo5.10 <- loo(posterior5.10, save_psis = T))
+(loo5.full <- loo(posterior5.full, save_psis = T))
+```
+```{r, cache=TRUE}
+rstanarm::loo_compare(loo5.1, loo5.2, loo5.3, loo5.4, loo5.5, loo5.6, loo5.7, loo5.8, loo5.9, loo5.10, loo5.full)
+```
+
+To calculate our posterior predictive accuracy, we used the following method. If the posterior probability of the song being liked for an particular song is greater or equal to $0.5$, then we would predict that that song to have a value of 1 (and similarly for less than $0.5$). For each observation, we can compare the posterior prediction to the actual observed value. The proportion of times we correctly predict an individual (i.e. [prediction = 0 and observation = 0] or [prediction = 1 and observation = 1]) is our classification accuracy.
+
+
 ```{r, echo=FALSE, message=FALSE}
 preds3 <- posterior_linpred(posterior3, transform = TRUE)
 pred3 <- colMeans(preds3)
@@ -419,4 +662,3 @@ round(mean(xor(pr3,as.integer(spotify1$target == 0))),3)
 ploo3 = E_loo(preds3, loo3$psis_object, type="mean", log_ratios = -log_lik(posterior3))$value
 round(mean(xor(ploo3>0.5,as.integer(spotify1$target==0))),3)
 ```
-
