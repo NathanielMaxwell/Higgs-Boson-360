@@ -102,18 +102,23 @@ Track_features$valence <- scale(Track_features$valence)
 ```
 
 \section{Introduction}
-    Music-making is often thought of as an artform—a subjective expression that falls into a specific “genre” according to its musical attributes. Beginning in the 1960s, pop music had been dominated by the verse-chorus form where “the verse sets the scene, the pre-chorus builds tension, and the chorus reaches a climax,” with the cycle predictably repeating itself [5]. This musical formula dominated the industry; in fact, “music theorist Jay Summach has found that by the end of the 1960s, 42 percent of hit songs used verse-chorus form. By the end of the 1980s, that figure had doubled to 84 percent” [5].
-   With the advent of the 21st Century, however, the digitization of music production paired with the introduction of streaming platforms has warped the fundamental structure of songs. On popular media platforms, only snapshots of songs reach the ears of the public: five-second memes, 15-second TikToks, or 30-second ads. The limitless access to songs on streaming platforms has changed the landscape of song-making—"the gist of it: songwriters now get to the good stuff sooner” [2]. This phenomenon exists as increasing accessibility of songs results in decreasing revenue for artists. “Artists are paid per play—provided the listener stays tuned for at least 30 seconds. Each stream earns a tiny fraction of a cent. And just 13% of that goes to the songwriter, says David Israelite of the National Music Publishers Association” [Economist]. In turn, for an artist to make a decent living, their songs need millions of plays.
-   For many musicians, the art of composing/performing/marketing a new song is an arduous process. Even after all the work has been completed and a song is ready to be played to the public, the biggest uncertainty still awaits: How will the song be received? Will it become a hit? Will it be a song that everyone skips over, or never becomes popular? The purpose of this analysis is to investigate which characteristics of a song (such as tempo, duration, mode, acousticness, etc.) would make it more “likeable,” less likely to be skipped, or more popular. Of course, music taste is a very subjective matter, and thus, there will be quite a bit of uncertainty around any variables that are deemed important/unimportant. What one person likes; another person may dislike. Therefore, looking at such musical characteristics through a Bayesian lens will help to quantify the uncertainty surrounding any of our findings. Through this analysis we hope to provide some conclusions that an aspiring musician (or even a well-established musician) can have at their disposal when creating new music.
-    These findings beg the question: so what are the features that make a song popular or appealing to a listener? Answers that would be valuable for any musician seeking success in today’s music industry. 
+  Music-making is often thought of as an artform—a subjective expression that falls into a specific “genre” according to its musical attributes. Beginning in the 1960s, pop music had been dominated by the verse-chorus form where “the verse sets the scene, the pre-chorus builds tension, and the chorus reaches a climax,” with the cycle predictably repeating itself [5]. This musical formula dominated the industry; in fact, “music theorist Jay Summach has found that by the end of the 1960s, 42 percent of hit songs used verse-chorus form. By the end of the 1980s, that figure had doubled to 84 percent” [5].
+    
+  With the advent of the 21st Century, however, the digitization of music production paired with the introduction of streaming platforms has warped the fundamental structure of songs. On popular media platforms, only snapshots of songs reach the ears of the public: five-second memes, 15-second TikToks, or 30-second ads. The limitless access to songs on streaming platforms has changed the landscape of song-making—"the gist of it: songwriters now get to the good stuff sooner” [2]. This phenomenon exists as increasing accessibility of songs results in decreasing revenue for artists. “Artists are paid per play—provided the listener stays tuned for at least 30 seconds. Each stream earns a tiny fraction of a cent. And just 13% of that goes to the songwriter, says David Israelite of the National Music Publishers Association” [Economist]. In turn, for an artist to make a decent living, their songs need millions of plays.
+   
+  For many musicians, the art of composing/performing/marketing a new song is an arduous process. Even after all the work has been completed and a song is ready to be played to the public, the biggest uncertainty still awaits: How will the song be received? Will it become a hit? Will it be a song that everyone skips over, or never becomes popular? The purpose of this analysis is to investigate which characteristics of a song (such as tempo, duration, mode, acousticness, etc.) would make it more “likeable,” less likely to be skipped, or more popular. Of course, music taste is a very subjective matter, and thus, there will be quite a bit of uncertainty around any variables that are deemed important/unimportant. What one person likes; another person may dislike. Therefore, looking at such musical characteristics through a Bayesian lens will help to quantify the uncertainty surrounding any of our findings. Through this analysis we hope to provide some conclusions that an aspiring musician (or even a well-established musician) can have at their disposal when creating new music.
+   
+  These findings beg the question: so what are the features that make a song popular or appealing to a listener? Answers that would be valuable for any musician seeking success in today’s music industry. 
 
 \section{Pre-Analysis}
 \subsection{Data}
-In our initial data set, we take a sample of 89,393 songs from 186,000 released by Spotify that tracks features of the song and if it was skipped or not. The songs within the data set were not confined to any prerequisite of genre or form; we wanted to see if any variables could impact the popularity of a song. Because this data set was not confined to an individual “taste” nor genre, limitations of this data were that song features may not be determined as significant due to the broadness of the data collected. With this limitation, we also analyzed data that pertained to one specific individual that recorded his tastes for 2,000 songs. 
-For this second dataset, the size was not as big because it presented the opinions of a single individual. George McIntire assembled this data when exploring the explanation behind his varying taste in music. He created two playlists—each with 1,000 songs—one with songs he liked and the other with songs he did not like [4]. In order to minimize bias, he had to make the “BAD” playlist equally as diverse as the “GOOD” playlist by putting in songs of different form rather than an entire album of a single artist he did not like.
+  In our initial data set, we take a sample of 89,393 tracks from 186,000 released by Spotify that document features of the track, as well as if it was skipped or not. The tracks within the data set were not confined to any prerequisite of genre or form; perhaps some were not even songs, but rather audiobooks or podcasts. We wanted to attempt to narrow the track selection to represent only songs, and see if any variables could impact the "popularity" of a track. Because this data set was not confined to an individual “taste” nor genre, limitations of this data were that track features may not be determined as significant due to the broadness of the data collected. Given this limitation, we decided to also analyze data that pertained to one specific individual who recorded his tastes for 2,000 songs. 
+  
+  For this second dataset, the size was not as big because it presented the opinions of a single individual. George McIntire assembled this data when exploring possible explanations behind his varying taste in music. He created two playlists — each with 1,000 songs — one with songs he liked and the other with songs he did not like [4]. In order to minimize bias, he had to make the “BAD” playlist equally as diverse as the “GOOD” playlist by putting in songs of different form rather than an entire album of a single artist he did not like. Each song contained musical attributes that hopefully will help explain his choice of a "BAD" vs. "GOOD" song.
+
 Limitations of this data can be attributed to the source being a single individual as well as the possibility that “taste” in music can not be fully associated with the variables in the dataset.
 
-Two datasets were utilized during this analysis.
+Here are the descriptors of variables for the two datasets.
 \begin{enumerate}
     \item The first dataset consists of 83,939 observations on Spotify of whether or not a track was skipped by users. In total, 65,417 different tracks were included in the dataset. Each track has the following characteristics:
     \begin{enumerate}
@@ -160,7 +165,9 @@ Two datasets were utilized during this analysis.
 
 
 \subsection{Model Selection}
-Our response variable, $\textbf{y}$, will be modeled by a $Bernoulli(\theta)$ distribution, where 1 means the track was skipped. To obtain the variable $\theta$, we will use the logit link, where $logit(\theta) = \eta$, and $\eta = \textbf{x}^T\boldsymbol{\beta}$, where $\textbf{x}$ is the covariate space for $\textbf{Y}$. In other words, we are creating a logistic regression model where $\theta$ is obtained from a linear model. For the first dataset, we wanted to estimate the values of the coefficients $\boldsymbol{\beta}$ for each of the variables to find out how they impact whether or not a track is skipped. We are assuming little knowledge about each variable's effect, so we propose a weakly informative prior for $[\boldsymbol{\beta}]$: Using recommendations from Gelman, Jakulin, Pittau, and Su, we use a cauchy(0,2.5) prior for each scaled variable. We centered all the variables and then scaled them so they had the same standard deviation so that no variable could have a disproportionate effect on the outcome.Using the rstanarm package, Rstudio will compute the posterior and draw MCMC samples from the posterior distribution $[\boldsymbol{\beta}|\textbf{Y}, \textbf{X}$]. 
+For the first dataset, our response variable, $\textbf{y}$, will be modeled by a $Bernoulli(\theta)$ distribution, where 1 means the track was skipped, and 0 means the track was not skipped. To obtain the variable $\theta$, we will use the logit link, where $logit(\theta) = \eta$, and $\eta = \textbf{x}^T\boldsymbol{\beta}$, where $\textbf{x} \in \textbf{X}$ is the covariate space for $\textbf{Y}$. In other words, we are creating a logistic regression model where $\theta$ is obtained from a linear model. We can write our sampling distribution for$\textbf{y}$ as $[\textbf{y}|\theta]$, and since $\theta$ is dependent upon $\boldsymbol{\beta}$ and $\textbf{x}$, we can write this as $[\textbf{y}|\boldsymbol{\beta},\textbf{x} ]$. 
+
+What we really want is to estimate the values of the coefficients $\boldsymbol{\beta}$ for each of the variables to find out how they impact whether or not a track is skipped. In order to form a posterior estimate for $\boldsymbol{\beta}$, we must specify a prior. We assume little knowledge about each variable's effect, so we propose a weakly informative prior for $[\boldsymbol{\beta}]$: Using recommendations from Gelman, Jakulin, Pittau, and Su [7], we use a Cauchy(0,2.5) prior for each variable. Furthermore, we centered all the variables and then scaled them to have the same standard deviation, so that no variable could have a disproportionate effect on the outcome, and thus have better interpretability. Now that we have a prior model $[\boldsymbol{\beta}]$ and sampling model $[\textbf{y}|\theta]$,we can use all $\textbf{y}_i \in \textbf{Y}$ to calculate the posterior $[\boldsymbol{\beta}|\textbf{Y}, \textbf{X}]$ using Baye's Theorem and proportionality. This will not be done by hand. Instead, using the rstanarm package, Rstudio will compute the posterior and draw MCMC samples from the $[\boldsymbol{\beta}|\textbf{Y}, \textbf{X}]$. In this way we will obtain estimates for the values of $\beta_0, \beta_1,...,\beta_k \in \boldsymbol{\beta}$.
 
 
 
@@ -237,11 +244,11 @@ mcmc_areas(as.matrix(posterior1), prob = 0.90, prob_outer = 1)
 round(posterior_interval(posterior1, prob = 0.90), 3)
 ```
 
-```{r, cache = T, echo=FALSE}
+```{r, cache = T, echo=FALSE, message=FALSE}
 (loo1 <- loo(posterior1, save_psis = TRUE))
 ```
 
-```{r, cache = T, echo=FALSE}
+```{r, cache = T, echo=FALSE, message=FALSE}
 posterior0 <- stan_glm(skipped ~ 1, data = Track_features_a,
                  family = binomial(link = "logit"), 
                  prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
@@ -250,9 +257,9 @@ posterior0 <- stan_glm(skipped ~ 1, data = Track_features_a,
 (loo0 <- loo(posterior0, save_psis = T))
 rstanarm::loo_compare(loo0, loo1)
 ```
-After running the rstanarm function and including all of the variables, we see that there is only variable whose 90% confidence interval does not include 0. That variable is duration, and furthermore, when calculating the 'leave-one-out' cross-validation information criterion (looic), we see that this model actually has a $\textit{higher}$  value than the looic of a baseline model with no predictors. In other words, our model is worse at predicting whether or not a song is skipped than if someone randomly guessed! Therefore, we will drop all variables that were not deemed significant at a 90% confidence interval (included 0 in their posterior interval), and rerun the model. In this case, 'duration' is the only variable remaining.
+After running the rstanarm function and including all of the variables, we see that there is only variable whose 90% confidence interval does not include 0. That variable is duration, and furthermore, when calculating the 'leave-one-out' cross-validation information criterion (looic), we see that this model actually has a $\textit{higher}$ value (1309) than the looic of a baseline model (1297) with no predictors. In other words, our model is worse at predicting whether or not a song is skipped than if someone randomly guessed! Therefore, we will drop all variables that were not deemed significant at a 90% confidence interval (included 0 in their posterior interval), and rerun the model. In this case, 'duration' is the only variable remaining.
 
-```{r}
+```{r, cache=TRUE, message=FALSE}
 posterior2 <- stan_glm(skipped ~ duration, data = Track_features_a,
                  family = binomial(link = "logit"), 
                  prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
@@ -264,13 +271,13 @@ mcmc_areas(as.matrix(posterior2), prob = 0.90, prob_outer = 1)
 round(posterior_interval(posterior2, prob = 0.90), 3)
 ```
 
-```{r}
+```{r, cache = TRUE}
 matrix1<-as.matrix(posterior2)
-plot(matrix1[,2], type="l")
-acf(matrix1[,2])
+trace1 <- plot(matrix1[,2], type="l")
+ACF1 <- acf(matrix1[,2])
 ```
 
-This model proved to be better, but not by much. To calculate our posterior predictive accuracy, we used the following method. If the posterior probability of a track being skipped  is greater or equal to $0.5$, then we would predict that observation to have a value of 1 (and similarly for less than $0.5$). For each observation, we can compare the posterior prediction to the actual observed value. The proportion of times we correctly predict an individual (i.e. [prediction = 0 and observation = 0] or [prediction = 1 and observation = 1]) is our classification accuracy. In our case, the posterior classification accuracy is 0.65. While we would want to also calculate the estimated accuracy on unseen data, since our number of observations is so large, we would expect the value to be the same when using a LOOCV, and this is indeed true: the value is still 0.65.
+This model proved to be better, with a looic value of 1293. To ensure that the MCMC samples created from the stan_glm fuction converged and mixed well, a traceplot and ACF plot confirmed that there were no problems (See appendix for graphs). To calculate our posterior predictive accuracy, we used the following method. If the posterior probability of a track being skipped is greater or equal to $0.5$, then we would predict that observation to have a value of 1 (and similarly for less than $0.5$). For each observation, we can compare the posterior prediction to the actual observed value. The proportion of times we correctly predict an individual (i.e. [prediction = 0 and observation = 0] or [prediction = 1 and observation = 1]) is our classification accuracy. In our case, the posterior classification accuracy is 0.65. While we would really want to also calculate the estimated accuracy on "unseen" data, or data that doesn't actually affect this model, because our number of observations is so large, we would expect the value to be the same when using a LOOCV, and this is indeed true: the value is still 0.65.
 
 ```{r, echo=FALSE, message=FALSE}
 preds2 <- posterior_linpred(posterior2, transform = TRUE)
@@ -286,6 +293,9 @@ round(mean(xor(pr2,as.integer(Track_features_a$skipped == 0))),3)
 ploo2 = E_loo(preds2, loo2$psis_object, type="mean", log_ratios = -log_lik(posterior2))$value
 round(mean(xor(ploo2 > 0.5,as.integer(Track_features_a$skipped==0))),3)
 ```
+\section{Conclusion}
+Our analysis of this dataset turned out to be rather inconclusive. It only returned one variable as significant, and that was duration. In effect, it stated that the longer the track is, the more likely it is to be skipped. Other than that, there were no other findings. This lack of conclusive analysis could be explained in a variety of ways. One, we do not have any guarantee that the tracks analyzed were actually songs. While we applied filters to attempt to filter out any tracks that were not songs, we still do not actually know the content of the track. So the uncertainty surrounding the track content is one factor that is certainly a model limitation. A second reason behind inconclusiveness is the fact that music taste is a very subjective field, and what one person likes, another person may not. Given that this data is pulled from a multitude of Spotify users, there is going to be a wide range of musical preferences. Therefore, it would be much harder to find any nuances in music style that might affect the broader population’s tendency to skip or not skip a song. An interesting note is that the duration of a song, our only significant variable, has been decreasing when looking specifically at the #1 song by year in the last few years, according to the New York Times [5]. This overall trend for all songs is backed by an article from the Economist that echoes that same sentiment [2]. It is clear, then, that this trend is evident in a Spotify user’s likelihood to skip or not skip a song.
+
 
 ###New Data
 ```{r, echo=FALSE, cache = TRUE, message=FALSE, warning=FALSE}
@@ -554,7 +564,7 @@ posterior5.full <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ in
 rstanarm::loo_compare(loo5.1, loo5.2, loo5.3, loo5.4, loo5.5, loo5.6, loo5.7, loo5.8, loo5.9, loo5.10, loo5.full)
 ```
 
-```{r}
+```{r, cache=TRUE}
 posterior5.interaction <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence + valence*mode+ duration_ms*danceability+ acousticness*liveness, data = spotify1,
                 family = binomial(link = "logit"), 
                 prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
@@ -568,7 +578,7 @@ rstanarm::loo_compare(loo5.interaction, loo5.full)
 ```
 
 
-```{r}
+```{r, cache=TRUE}
 posterior5.interaction2 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence + duration_ms*danceability+ acousticness*liveness, data = spotify1,
                 family = binomial(link = "logit"), 
                 prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
@@ -675,4 +685,5 @@ acf(matrix5[,13])
 
 [6] Vehtari, Aki, et al. “Bayesian Logistic Regression with Rstanarm.” Github, 4 Dec. 2019, avehtari.github.io/modelselection/diabetes.html. 
 
+[7]
 
