@@ -113,13 +113,13 @@ Track_features$valence <- scale(Track_features$valence)
 \section{Pre-Analysis}
 \subsection{Data}
 
-$\textbf{Data set 1:}$ In our initial data set, we take a sample of 89,393 tracks from 167,881 released by Spotify that document musical attributes of the track, as well as if it was skipped by a listener on Spotify or not. The set of 167,881 observations was a sample of a full set of over 30 million observations. The original purpose of the full data set was to analyze track attributes in order to predict whether a track would be skipped by a listener in the future. The tracks within the data set were not confined to any prerequisite of genre or form; perhaps some were not even songs, but rather audiobooks or podcasts. We wanted to attempt to narrow the track selection to represent only songs, and see if any variables could impact the "popularity" of a track. The explanation of narrowing process is explained in detail in the variable explanation section
+$\textbf{Data set 1:}$ In our initial data set, we take a sample of 89,393 tracks from 167,881 released by Spotify that document musical attributes of the track, as well as if it was skipped by a listener on Spotify or not. The set of 167,881 observations was a sample of a full set of over 30 million observations. The original purpose of the full data set was to analyze track attributes in order to predict whether a track would be skipped by a listener in the future. The tracks within the data set were not confined to any prerequisite of genre or form; perhaps some were not even songs, but rather audiobooks or podcasts. We wanted to attempt to narrow the track selection to represent only songs, and see if any variables could impact the "popularity" of a track. The explanation of the narrowing process is explained in detail in the variable explanation section.
   
   Because this data set was not confined to an individual “taste” nor genre, limitations of this data were that song features may not be determined as significant due to the broadness of the data collected. Furthermore, there was no genre assigned to each data point, so it was impossible to narrow the data to be more specific to a particular sub-industry. Because of this, we recognized that in order to create a more meaningful report, we would have to narrow our focus and our data.  
   
 $\textbf{Data set 2:}$ With the limitation of the first data set, we decided to narrow our focus and analyze data that pertained to one specific individual that recorded his tastes for 2,000 songs. For this second dataset, the size was not as big because it presented the opinions of a single individual. George McIntire assembled this data when exploring the explanation behind his varying taste in music. He created two playlists—each with 1,000 songs—one with songs he liked and the other with songs he did not like [4]. In order to minimize bias, he had to make the “BAD” playlist equally as diverse as the “GOOD” playlist by putting in songs of different form rather than an entire album of a single artist he did not like.
 
-Before beginning our analysis of the data, we removed the name and the artist of each song to avoid an unnecessary amount of dummy variables. Furthermore, as a new musician cannot attempt to be a different artist, that information is not important to our analysis. However, when observing the original data, it was clear that popular artists such as Drake and Young Thug frequented list. We also decided to exclude the variable key, since only about 1 in 10,000 people have perfect pitch, and thus would be able to identify the key [3].
+Before beginning our analysis of the data, we removed the name and the artist of each song to avoid an unnecessary amount of dummy variables. Furthermore, as a new musician cannot attempt to be a different artist, that information is not important to our analysis. However, as a side note to keep in mind when interpreting, in the original data it was clear that popular artists such as Drake and Young Thug frequented list. We also decided to exclude the variable "key", since only about 1 in 10,000 people have perfect pitch, and thus only .01% of the population would be able to identify the key [3].
 
 Limitations of this data can be attributed to the source being a single individual as well as the possibility that “taste” in music can not be fully associated with the variables in the dataset.
 
@@ -177,6 +177,16 @@ Here are the descriptors of variables for the two datasets.
 \end{enumerate}
 
 
+\section{Data Set 1}
+\subsection{Exploratory Data Analysis}
+When observing the variables of the dataset, nearly all of the histograms of values were approximately normal, aside from a few that had a very heavy left tail or right tail skew. Furthermore, this correlation plot can help give us an idea for potential interaction terms, depending on if the single variables are significant by themselves.
+
+```{r, echo=FALSE}
+Track_features_b <- Track_features[-c(1,3,11)]
+Track_features_b$skipped <- as.numeric(Track_features_b$skipped)
+corrplot(cor(Track_features_b))
+```
+Beat Strength, Bounciness, and Danceability all have very high correlation values. If those variables end up being significant, it will be interesting to see if/how they interact.
 
 \subsection{Model Selection}
 For the first dataset, our response variable, $\textbf{y}$, will be modeled by a $Bernoulli(\theta)$ distribution, where 1 means the track was skipped, and 0 means the track was not skipped. To obtain the variable $\theta$, we will use the logit link, where $logit(\theta) = \eta$, and $\eta = \textbf{x}^T\boldsymbol{\beta}$, where $\textbf{x} \in \textbf{X}$ is the covariate space for $\textbf{Y}$. In other words, we are creating a logistic regression model where $\theta$ is obtained from a linear model. We can write our sampling distribution for$\textbf{y}$ as $[\textbf{y}|\theta]$, and since $\theta$ is dependent upon $\boldsymbol{\beta}$ and $\textbf{x}$, we can write this as $[\textbf{y}|\boldsymbol{\beta},\textbf{x} ]$. 
@@ -187,7 +197,7 @@ Note: In order to allow efficient posterior sampling, a random sample of 5000 tr
 
 
 
-```{r, echo=FALSE, fig.show='hide', message=FALSE}
+```{r, echo=FALSE, fig.show='hide', results='hide', message=FALSE}
 p1= ggplot(data = Track_features, aes(x = duration)) +
   geom_histogram()
 p2= ggplot(data = Track_features, aes(x = us_popularity_estimate)) +
@@ -235,7 +245,7 @@ grid.arrange(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,g11,  nrow=2)
 ```
 
 
-\section{Posterior Estimates}
+\subsection{Posterior Estimates}
 ```{r, echo=FALSE}
 set.seed(2)
 a <- sample.int(length(Track_features$track_id), 5000)
@@ -254,9 +264,8 @@ posterior1 <- stan_glm(skipped ~ ., data = Track_features_a,
                  refresh = 0)
 ```
 
-```{r, echo=FALSE, cache=TRUE}
+```{r, echo=FALSE, cache=TRUE, results='hide'}
 POST1 <- mcmc_areas(as.matrix(posterior1), prob = 0.95, prob_outer = 1)
-POST1
 round(posterior_interval(posterior1, prob = 0.95), 3)
 ```
 
@@ -273,7 +282,7 @@ posterior0 <- stan_glm(skipped ~ 1, data = Track_features_a,
 (loo0 <- loo(posterior0, save_psis = T))
 rstanarm::loo_compare(loo0, loo1)
 ```
-After running the rstanarm function and including all of the variables, we see that there is only variable whose 95% confidence interval does not include 0. That variable is duration, and furthermore, when calculating the 'leave-one-out' cross-validation information criterion (looic), we see that this model barely has a slightly lower value (6366) than the looic of a baseline model (6373) with no predictors.  To attempt to find the best model, we will drop all variables that were not deemed significant at a 95% confidence interval (included 0 in their posterior interval), and rerun the model. In this case, 'duration' is the only variable remaining.
+After running the rstanarm function and including all of the variables, we see that there is only variable whose 95% confidence interval does not include 0. That variable is duration, and when calculating the 'leave-one-out' cross-validation information criterion (looic), we see that this model barely has a slightly lower value (6366) than the looic of a baseline model (6373) with no predictors.To attempt to find the best model, we will drop all variables that were not deemed significant at a 95% confidence interval (included 0 in their posterior interval), and rerun the model. In this case, 'duration' is the only variable remaining.
 
 ```{r, echo=FALSE, results='hide', cache=TRUE}
 posterior2 <- stan_glm(skipped ~ duration, data = Track_features_a,
@@ -282,21 +291,22 @@ posterior2 <- stan_glm(skipped ~ duration, data = Track_features_a,
                  seed = seed,
                  refresh = 0)
 POST2 <- mcmc_areas(as.matrix(posterior2), prob = 0.95, prob_outer = 1)
+round(coef(posterior2), 3)
 round(posterior_interval(posterior2, prob = 0.95), 3)
 ```
-```{r,results='hide', message=FALSE, cache=TRUE}
+```{r,results='hide', message=FALSE, cache=TRUE, echo=FALSE}
 (loo2 <- loo(posterior2, save_psis = TRUE))
 rstanarm::loo_compare(loo0, loo2)
 ```
 
 
-```{r, message=FALSE, fig.show='hide', results='hide', cache=TRUE}
+```{r, message=FALSE, fig.show='hide', results='hide', cache=TRUE, echo=FALSE}
 matrix2<-as.matrix(posterior2)
 trace2 <- plot(matrix2[,2], type="l")
 ACF2 <- acf(matrix2[,2])
 ```
 
-This model proved to be better, with a looic value of 6358. To ensure that the MCMC samples created from the stan_glm fuction converged and mixed well, a traceplot and ACF plot confirmed that there were no problems (See appendix for graphs). To calculate our posterior predictive accuracy, we used the following method. If the posterior probability of a track being skipped is greater or equal to $0.5$, then we would predict that observation to have a value of 1 (and similarly for less than $0.5$). For each observation, we can compare the posterior prediction to the actual observed value. The proportion of times we correctly predict an individual (i.e. [prediction = 0 and observation = 0] or [prediction = 1 and observation = 1]) is our classification accuracy. In our case, the posterior classification accuracy is 0.65. While we would really want to also calculate the estimated accuracy on "unseen" data, or data that doesn't actually affect this model, because our number of observations is so large, we would expect the value to be the same when using a LOOCV, and this is indeed true: the value is still 0.65.
+This model proved to be better, with a looic value of 6358. To ensure that the MCMC samples created from the stan_glm function converged and mixed well, a traceplot and ACF plot confirmed that they indeed did converge and mix well (See appendix for graphs). To calculate our posterior predictive accuracy, we used the following method. If the posterior probability of a track being skipped is greater or equal to $0.5$, then we would predict that observation to have a value of 1 (and similarly for less than $0.5$). For each observation, we can compare the posterior prediction to the actual observed value. The proportion of times we correctly predict an individual (i.e. [prediction = 0 and observation = 0] or [prediction = 1 and observation = 1]) is our classification accuracy. In our case, the posterior classification accuracy is 0.67. While we would really want to also calculate the estimated accuracy on "unseen" data, or data that doesn't actually affect this model, because our number of observations is so large (even using a sample), we would expect the value to be the same when using a LOOCV, and this is indeed true: the value is still 0.67.
 
 ```{r, echo=FALSE, message=FALSE, cache=TRUE}
 preds2 <- posterior_linpred(posterior2, transform = TRUE)
@@ -312,11 +322,16 @@ round(mean(xor(pr2,as.integer(Track_features_a$skipped == 0))),3)
 ploo2 = E_loo(preds2, loo2$psis_object, type="mean", log_ratios = -log_lik(posterior2))$value
 round(mean(xor(ploo2 > 0.5,as.integer(Track_features_a$skipped==0))),3)
 ```
-\section{Conclusion}
+\subsection{Results}
+Given the 12 variables in this data set, only 1 of them turned out to be significant. Hence, we will provide an interpretation of the variable "duration" so that it can be utilized when musicians are creating new music.
+
+The posterior estimate for $\hat\beta_{duration}$ is 0.126, and the 95% confidence interval for this variable is (0.066, 0.185). We will not provide a literal interpretation for the variable, for two reasons: 1, the data is scaled, making interpretation much harder, and 2; a musician is ultimately looking to create an art form for people to enjoy, and given the subjectiveness of art appreciation, a literal interpretation of the variable wouldn't hold much weight in the real world. Instead, it is sufficient to know that as the duration of a song increases, the likelihood that it will be skipped increases as well. In other words, the longer a song is, the less likely a listener will stay engaged with it. This makes sense on an intuitive level, and supporting evidence for this result will be presented in the conclusion.
+
+\subsection{Conclusion}
 Our analysis of this dataset turned out to be rather inconclusive. It only returned one variable as significant, and that was duration. In effect, it stated that the longer the track is, the more likely it is to be skipped. Other than that, there were no other findings. This lack of conclusive analysis could be explained in a variety of ways. One, we do not have any guarantee that the tracks analyzed were actually songs. While we applied filters to attempt to filter out any tracks that were not songs, we still do not actually know the content of the track. So the uncertainty surrounding the track content is one factor that is certainly a model limitation. A second reason behind inconclusiveness is the fact that music taste is a very subjective field, and what one person likes, another person may not. Given that this data is pulled from a multitude of Spotify users, there is going to be a wide range of musical preferences. Therefore, it would be much harder to find any nuances in music style that might affect the broader population’s tendency to skip or not skip a song. An interesting note is that the duration of a song, our only significant variable, has been decreasing when looking specifically at the #1 song by year in the last few years, according to the New York Times [5]. This overall trend for all songs is backed by an article from the Economist that echoes that same sentiment [2]. It is clear, then, that this trend is evident in a Spotify user’s likelihood to skip or not skip a song.
 
 
-###New Data
+\section{Data Set 2}
 ```{r, echo=FALSE, cache = TRUE, message=FALSE, warning=FALSE}
 spotify <- data.frame(read_csv("data/spotify.csv"))
 #View(spotify)
@@ -345,7 +360,8 @@ spotify1$tempo <- scale(spotify1$tempo)
 spotify1$valence <- scale(spotify1$valence)
 ```
 
-```{r, echo=FALSE, cache=TRUE, message=FALSE}
+\subsection{Exploratory Data Analysis}
+```{r, echo=FALSE, cache=TRUE, message=FALSE, results='hide', fig.show='hide'}
 #EDA
 a1= ggplot(data = spotify1, aes(x = duration_ms)) +
   geom_histogram()
@@ -375,7 +391,6 @@ grid.arrange(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,  nrow=2)
 
 ```{r, echo=FALSE}
 spotify2 <- spotify1
-#spotify2$key <- as.numeric(spotify2$key)
 spotify2$target <- as.numeric(spotify2$target)
   #this makes target 2 or 1
 spotify2$mode <- as.numeric(spotify2$mode)
@@ -387,6 +402,8 @@ spotify2$time_signature <- as.numeric(spotify2$time_signature)
 corrplot(cor(spotify2))
 ```
 
+\subsection{Model Selection}
+We will use the exact same procedure that was used for the first data set to obtain posterior estimates for $\boldsymbol{\beta}$, as well as create a model of best fit.
 
 ```{r, cache = TRUE, echo = FALSE, message=FALSE}
 seed=1
@@ -399,18 +416,17 @@ posterior3 <- stan_glm(target ~ ., data = spotify1,
 ```
 
 
-```{r, cache = T, echo=FALSE}
+```{r, cache = T, echo=FALSE, fig.show='hide', results='hide'}
 POST3 <- mcmc_areas(as.matrix(posterior3), prob = 0.90, prob_outer = 1)
 round(coef(posterior3), 3)
 round(posterior_interval(posterior3, prob = 0.90), 3)
 ```
 
 
-```{r, cache = T}
+```{r, cache = T, results='hide', fig.show='hide'}
 (loo3 <- loo(posterior3, save_psis = TRUE))
 ```
 
-#Model Selection
 
 
 ```{r, cache = T, echo=FALSE}
@@ -700,5 +716,5 @@ trace5.acoust.live <- acf(matrix5[,13])
 
 [6] Vehtari, Aki, et al. “Bayesian Logistic Regression with Rstanarm.” Github, 4 Dec. 2019, avehtari.github.io/modelselection/diabetes.html. 
 
-[7]
+[7] Andrew Gelman, Aleks Jakulin, Maria Grazia Pittau, Yu-Sung Su. "A weakly informative default prior distributionfor logistic and other regression models." The Annals of Applied Statistics, 2(4) 1360-1383 December 2008, https://projecteuclid.org/journals/annals-of-applied-statistics/volume-2/issue-4/A-weakly-informative-default-prior-distribution/10.1214/08-AOAS191.full?tab=ArticleLink
 
