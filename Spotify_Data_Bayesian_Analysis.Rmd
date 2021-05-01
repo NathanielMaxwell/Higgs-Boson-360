@@ -22,6 +22,8 @@ library(dplyr)
 library(gridExtra)
 library(corrplot)
 library(projpred)
+library(GGally)
+
 #
 ggplot2::theme_set(ggplot2::theme_bw())
 knitr::opts_chunk$set(fig.align = 'center')
@@ -146,7 +148,7 @@ Two datasets were utilized during this analysis.
 
 
 \subsection{Model Selection}
-For the first dataset, we wanted to estimate the values of the coefficients $\boldsymbol{\beta}$ for each of the variables to find out how they impact whether or not a track is skipped. We are assuming little knowledge about each variable's effect, so we propose a weakly informative prior for $[\boldsymbol{\beta}]$: Using recommendations from Gelman, Jakulin, Pittau, and Su, we use a cauchy(0,2.5) prior for each scaled variable (we scaled the variables). Our response variable, $\textbf{y}$, will follow a logistic regression model, where 1 means the track was skipped. This is equivalent to the Bernoulli distribution $\textbf{y}|\theta \sim Bern(\theta)$. We will use the logit link, where $logit(\theta) = \eta$, and $\eta = \textbf{x}^T\boldsymbol{\beta}$, where $\textbf{x}$ is the covariate space for $textbf{Y}$. Using the rstanarm package, Rstudio will compute the posterior and draw MCMC samples from the posterior distribution $[\boldsymbol{\beta}|$\textbf{Y}$, $\textbf{X}$]. 
+For the first dataset, we wanted to estimate the values of the coefficients $\boldsymbol{\beta}$ for each of the variables to find out how they impact whether or not a track is skipped. We are assuming little knowledge about each variable's effect, so we propose a weakly informative prior for $[\boldsymbol{\beta}]$: Using recommendations from Gelman, Jakulin, Pittau, and Su, we use a cauchy(0,2.5) prior for each scaled variable (we scaled the variables). Our response variable, $\textbf{y}$, will follow a logistic regression model, where 1 means the track was skipped. This is equivalent to the Bernoulli distribution $\textbf{y}|\theta \sim Bern(\theta)$. We will use the logit link, where $logit(\theta) = \eta$, and $\eta = \textbf{x}^T\boldsymbol{\beta}$, where $\textbf{x}$ is the covariate space for $\textbf{Y}$. Using the rstanarm package, Rstudio will compute the posterior and draw MCMC samples from the posterior distribution $[\boldsymbol{\beta}|\textbf{Y}, \textbf{X}$]. 
 
 
 
@@ -256,7 +258,7 @@ round(posterior_interval(posterior2, prob = 0.90), 3)
 
 This model proved to be better, but not by much. Furthermore, the p
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, message=FALSE}
 preds2 <- posterior_linpred(posterior2, transform = TRUE)
 pred2 <- colMeans(preds2)
 ```
@@ -277,7 +279,7 @@ spotify <- data.frame(read_csv("data/spotify.csv"))
 #View(spotify)
 ```
 
-```{r}
+```{r, echo=FALSE}
 #Drop un-needed variables
 spotify1 <- spotify[-c(1,16,17)]
 #View(spotify1)
@@ -299,7 +301,7 @@ spotify1$tempo <- scale(spotify1$tempo)
 spotify1$valence <- scale(spotify1$valence)
 ```
 
-```{r, echo=FALSE, cache=TRUE}
+```{r, echo=FALSE, cache=TRUE, message=FALSE}
 #EDA
 a1= ggplot(data = spotify1, aes(x = duration_ms)) +
   geom_histogram()
@@ -326,6 +328,19 @@ a10=ggplot(data = spotify1, aes(x = target)) +
 grid.arrange(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,  nrow=2)
 ```
 
+
+```{r, echo=FALSE}
+spotify2 <- spotify1
+spotify2$key <- as.numeric(spotify2$key)
+spotify2$target <- as.numeric(spotify2$target)
+spotify2$mode <- as.numeric(spotify2$mode)
+spotify2$time_signature <- as.numeric(spotify2$time_signature)
+```
+
+
+```{r, echo=FALSE}
+corrplot(cor(spotify2))
+```
 
 
 ```{r, cache = TRUE, echo = FALSE}
@@ -363,7 +378,7 @@ posterior4 <- stan_glm(target ~ 1, data = spotify1,
 rstanarm::loo_compare(loo3, loo4)
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, message=FALSE}
 preds3 <- posterior_linpred(posterior3, transform = TRUE)
 pred3 <- colMeans(preds3)
 ```
