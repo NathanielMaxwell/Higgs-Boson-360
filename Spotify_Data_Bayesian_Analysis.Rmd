@@ -156,7 +156,7 @@ For the first dataset, we wanted to estimate the values of the coefficients $\bo
 
 
 
-```{r, echo=FALSE, fig.show='hide'}
+```{r, echo=FALSE, fig.show='hide', message=FALSE}
 p1= ggplot(data = Track_features, aes(x = duration)) +
   geom_histogram()
 p2= ggplot(data = Track_features, aes(x = us_popularity_estimate)) +
@@ -187,7 +187,7 @@ p13=ggplot(data = Track_features, aes(x = skipped)) +
 grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,p11, p12, p13, nrow=2)
 ```
 
-```{r, echo=FALSE, fig.show='hide'}
+```{r, echo=FALSE, fig.show='hide', message=FALSE}
 g1= ggplot(Track_features, aes(skipped, duration)) + geom_boxplot()
 g2=ggplot(Track_features, aes(skipped, us_popularity_estimate)) + geom_boxplot()
 g3=ggplot(Track_features, aes(skipped, acousticness)) + geom_boxplot()
@@ -343,7 +343,7 @@ corrplot(cor(spotify2))
 ```
 
 
-```{r, cache = TRUE, echo = FALSE}
+```{r, cache = TRUE, echo = FALSE, message=FALSE}
 seed=1
 posterior3 <- stan_glm(target ~ ., data = spotify1,
                  family = binomial(link = "logit"), 
@@ -354,7 +354,7 @@ posterior3 <- stan_glm(target ~ ., data = spotify1,
 summary(posterior3)
 ```
 
-```{r, eval = F, echo = FALSE}
+```{r, eval = F, echo = FALSE, message=FALSE}
 launch_shinystan(posterior3)
 ```
 
