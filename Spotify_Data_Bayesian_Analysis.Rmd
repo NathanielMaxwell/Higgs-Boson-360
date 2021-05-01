@@ -23,6 +23,11 @@ library(gridExtra)
 library(corrplot)
 library(projpred)
 library(GGally)
+library(tidyverse)
+library(tidyverse)
+library(broom)
+library(knitr)
+library(patchwork) 
 
 #
 ggplot2::theme_set(ggplot2::theme_bw())
@@ -97,7 +102,10 @@ Track_features$valence <- scale(Track_features$valence)
 ```
 
 \section{Introduction}
-For many musicians, the art of composing/performing/marketing a new song is an arduous process. Even after all the work has been completed and a song is ready to be played to the public, the biggest uncertainty still awaits: How will the song be received? Will it become a hit? Will it be a song that everyone skips over, or never becomes popular? The purpose of this analysis is to investigate which characteristics of a song (such as tempo, duration, mode, acousticness, etc.) would make it more “likeable,” less likely to be skipped, or more popular. Of course, music taste is a very subjective matter, and thus, there will be quite a bit of uncertainty around any variables that are deemed important/unimportant. What one person likes; another person may dislike. Therefore, looking at such musical characteristics through a Bayesian lens will help to quantify the uncertainty surrounding any of our findings. Through this analysis we hope to provide some conclusions that an aspiring musician (or even a well-established musician) can have at their disposal when creating new music. 
+    Music-making is often thought of as an artform—a subjective expression that falls into a specific “genre” according to its musical attributes. Beginning in the 1960s, pop music had been dominated by the verse-chorus form where “the verse sets the scene, the pre-chorus builds tension, and the chorus reaches a climax,” with the cycle predictably repeating itself [NY TIMES]. This musical formula dominated the industry; in fact, “music theorist Jay Summach has found that by the end of the 1960s, 42 percent of hit songs used verse-chorus form. By the end of the 1980s, that figure had doubled to 84 percent” [NY TIMES].
+   With the advent of the 21st Century, however, the digitization of music production paired with the introduction of streaming platforms has warped the fundamental structure of songs. On popular media platforms, only snapshots of songs reach the ears of the public: five-second memes, 15-second TikToks, or 30-second ads. The limitless access to songs on streaming platforms has changed the landscape of song-making—"the gist of it: songwriters now get to the good stuff sooner” [Economist]. This phenomenon exists as increasing accessibility of songs results in decreasing revenue for artists. “Artists are paid per play—provided the listener stays tuned for at least 30 seconds. Each stream earns a tiny fraction of a cent. And just 13% of that goes to the songwriter, says David Israelite of the National Music Publishers Association” [Economist]. In turn, for an artist to make a decent living, their songs need millions of plays.
+   For many musicians, the art of composing/performing/marketing a new song is an arduous process. Even after all the work has been completed and a song is ready to be played to the public, the biggest uncertainty still awaits: How will the song be received? Will it become a hit? Will it be a song that everyone skips over, or never becomes popular? The purpose of this analysis is to investigate which characteristics of a song (such as tempo, duration, mode, acousticness, etc.) would make it more “likeable,” less likely to be skipped, or more popular. Of course, music taste is a very subjective matter, and thus, there will be quite a bit of uncertainty around any variables that are deemed important/unimportant. What one person likes; another person may dislike. Therefore, looking at such musical characteristics through a Bayesian lens will help to quantify the uncertainty surrounding any of our findings. Through this analysis we hope to provide some conclusions that an aspiring musician (or even a well-established musician) can have at their disposal when creating new music.
+    These findings beg the question: so what are the features that make a song popular or appealing to a listener? Answers that would be valuable for any musician seeking success in today’s music industry. 
 
 \section{Pre-Analysis}
 \subsection{Data}
@@ -262,6 +270,7 @@ This model proved to be better, but not by much. Furthermore, the p
 preds2 <- posterior_linpred(posterior2, transform = TRUE)
 pred2 <- colMeans(preds2)
 ```
+
 ```{r, echo=FALSE, cache = TRUE}
 pr2 <- as.integer(pred2 >= 0.5)
 # have the students calculate this themselves?
@@ -281,11 +290,11 @@ spotify <- data.frame(read_csv("data/spotify.csv"))
 
 ```{r, echo=FALSE}
 #Drop un-needed variables
-spotify1 <- spotify[-c(1,16,17)]
+spotify1 <- spotify[-c(1,7,16,17)]
 #View(spotify1)
 spotify1$target <- factor(spotify1$target)
 spotify1$mode <- factor(spotify1$mode)
-spotify1$key <- factor(spotify1$key)
+#spotify1$key <- factor(spotify1$key)
 spotify1 <- spotify1 %>% 
    mutate(duration_ms = duration_ms / 1000)
 # scale the covariates for easier comparison of coefficient posteriors
@@ -331,8 +340,9 @@ grid.arrange(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,  nrow=2)
 
 ```{r, echo=FALSE}
 spotify2 <- spotify1
-spotify2$key <- as.numeric(spotify2$key)
+#spotify2$key <- as.numeric(spotify2$key)
 spotify2$target <- as.numeric(spotify2$target)
+  #this makes target 2 or 1
 spotify2$mode <- as.numeric(spotify2$mode)
 spotify2$time_signature <- as.numeric(spotify2$time_signature)
 ```
@@ -363,9 +373,25 @@ mcmc_areas(as.matrix(posterior3), prob = 0.90, prob_outer = 1)
 round(coef(posterior3), 3)
 round(posterior_interval(posterior3, prob = 0.90), 3)
 ```
+
+#BIC
+```{r}
+#View(spotify2)
+
+#full_model <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ energy+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ time_signature+ valence, data = spotify2,
+#                 family = binomial(link = "logit"), 
+#                 prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
+ #                seed = seed,
+  #               refresh = 0)
+
+```
+
+
 ```{r, cache = T}
 (loo3 <- loo(posterior3, save_psis = TRUE))
 ```
+
+#Model Selection
 
 
 ```{r, cache = T, echo=FALSE}
