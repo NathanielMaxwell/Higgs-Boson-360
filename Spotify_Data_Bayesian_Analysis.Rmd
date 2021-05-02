@@ -108,16 +108,16 @@ Track_features$valence <- scale(Track_features$valence)
    
   For many musicians, the art of composing/performing/marketing a new song is an arduous process. Even after all the work has been completed and a song is ready to be played to the public, the biggest uncertainty still awaits: How will the song be received? Will it become a hit? Will it be a song that everyone skips over, or never becomes popular? The purpose of this analysis is to investigate which characteristics of a song (such as tempo, duration, mode, acousticness, etc.) would make it more “likeable,” less likely to be skipped, or more popular. Of course, music taste is a very subjective matter, and thus, there will be quite a bit of uncertainty around any variables that are deemed important/unimportant. What one person likes; another person may dislike. Therefore, looking at such musical characteristics through a Bayesian lens will help to quantify the uncertainty surrounding any of our findings. Through this analysis we hope to provide some conclusions that an aspiring musician (or even a well-established musician) can have at their disposal when creating new music.
    
-  These findings beg the question: so what are the features that make a song popular or appealing to a listener? Answers that would be valuable for any musician seeking success in today’s music industry. 
+  These findings beg the question: so what are the features that make a song popular or appealing to a listener? These answers would be valuable for any musician seeking success in today’s music industry. 
 
 \section{Pre-Analysis}
 \subsection{Data}
 
-$\textbf{Data set 1:}$ In our initial data set, we take a sample of 89,393 tracks from 167,881 released by Spotify that document musical attributes of the track, as well as if it was skipped by a listener on Spotify or not. The set of 167,881 observations was a sample of a full set of over 30 million observations. The original purpose of the full data set was to analyze track attributes in order to predict whether a track would be skipped by a listener in the future. The tracks within the data set were not confined to any prerequisite of genre or form; perhaps some were not even songs, but rather audiobooks or podcasts. We wanted to attempt to narrow the track selection to represent only songs, and see if any variables could impact the "popularity" of a track. The explanation of the narrowing process is explained in detail in the variable explanation section.
+$\textbf{Data set 1:}$ In our initial data set, we take a sample of 83,939 tracks from 167,881 released by Spotify that document musical attributes of the track, as well as if it was skipped by a listener on Spotify or not. The set of 167,881 observations was a sample of a full set of over 30 million observations. The original purpose of the full data set was to analyze track attributes in order to predict whether a track would be skipped by a listener in the future. The tracks within the data set were not confined to any prerequisite of genre or form; perhaps some were not even songs, but rather audiobooks or podcasts. We wanted to attempt to narrow the track selection to represent only songs, and see if any variables could impact the "popularity" of a track. The explanation of the narrowing process is explained in detail in the variable explanation section.
   
   Because this data set was not confined to an individual “taste” nor genre, limitations of this data were that song features may not be determined as significant due to the broadness of the data collected. Furthermore, there was no genre assigned to each data point, so it was impossible to narrow the data to be more specific to a particular sub-industry. Because of this, we recognized that in order to create a more meaningful report, we would have to narrow our focus and our data.  
   
-$\textbf{Data set 2:}$ With the limitation of the first data set, we decided to narrow our focus and analyze data that pertained to one specific individual that recorded his tastes for 2,000 songs. For this second dataset, the size was not as big because it presented the opinions of a single individual. George McIntire assembled this data when exploring the explanation behind his varying taste in music. He created two playlists—each with 1,000 songs—one with songs he liked and the other with songs he did not like [4]. In order to minimize bias, he had to make the “BAD” playlist equally as diverse as the “GOOD” playlist by putting in songs of different form rather than an entire album of a single artist he did not like.
+$\textbf{Data set 2:}$ With the limitation of the first data set, we decided to narrow our focus and analyze data that pertained to one specific individual that recorded his tastes for 2,017 songs. For this second dataset, the size was not as big because it presented the opinions of a single individual. George McIntire assembled this data when exploring the explanation behind his varying taste in music. He created two playlists—each with about 1,000 songs—one with songs he liked and the other with songs he did not like [4]. In order to minimize bias, he had to make the “BAD” playlist equally as diverse as the “GOOD” playlist by putting in songs of different form rather than an entire album of a single artist he did not like.
 
 Before beginning our analysis of the data, we removed the name and the artist of each song to avoid an unnecessary amount of dummy variables. Furthermore, as a new musician cannot attempt to be a different artist, that information is not important to our analysis. However, as a side note to keep in mind when interpreting, in the original data it was clear that popular artists such as Drake and Young Thug frequented list. We also decided to exclude the variable "key", since only about 1 in 10,000 people have perfect pitch, and thus only .01% of the population would be able to identify the key [3].
 
@@ -125,15 +125,16 @@ Limitations of this data can be attributed to the source being a single individu
 
 
 
-$\textbf{Data set 1 Importation Method:}$ The initial dataset came in two files. The first file contained the track id and whether or not the track was skipped (186,000 observations), and the second file contained the attributes of the tracks (of which there were 50,704 distinct tracks). Given that Rstudio only takes file sizes of less than 5MB, we extracted every other observation to cut the first file size in half to 83,939. For the second file, we discarded variables that would have no interpretation, and given that the file was still above 5MB, we split it into half, and imported both of them, along with the first file, into Rstudio. Finally, we combined the three files all into 1 file to obtain 83,939 observations containing track attributes and whether or not that track was skipped.
+$\textbf{Data set 1 Importation Method:}$ The initial dataset came in two files. The first file contained the track id and whether or not the track was skipped (167,881 observations), and the second file contained the attributes of the tracks (of which there were 50,704 distinct tracks). Given that Rstudio only takes file sizes of less than 5MB, we extracted every other observation to cut the first file size in half to 83,939. For the second file, we discarded variables that would have no interpretation, and given that the file was still above 5MB, we split it into half, and imported both of them, along with the first file, into Rstudio. Finally, we combined the three files all into 1 file to obtain 83,939 observations containing track attributes and whether or not that track was skipped.
  
 $\textbf{Data set 2 Importation Method:}$ 
+The second data set used came from an individual who was passionate about exploring his personal tastes in music. He had assembled a data set of 2,000 songs: half of which he "liked" ("target"= 1), and the other half which he "did not like" ("target"=0) The data needed very little manipulation besides scaling the numeric, continuous values and factoring the variables "mode", "time$\_$signature", and the response variable "target".
  
 $\textbf{Data set Descriptors:}$ 
-Here are the descriptors of variables for the two datasets.
+Here are the descriptors of variables for the two data sets. The variables in the second data set without descriptions had the same descriptions as the duplicate variables in the first data set.
 
 \begin{enumerate}
-    \item The first dataset consists of 83,939 observations on Spotify of whether or not a track was skipped by users. In total, 65,417 different tracks were included in the dataset. The response variable is “skipped” (1 if skipped and 0 if not), and is dependent upon the variables containing musical attributes, which will be described below. Each track has the following characteristics:
+    \item The first dataset consists of the response variable “skipped” (1 if skipped and 0 if not), and is dependent upon the variables containing musical attributes, which will be described below. Each track has the following characteristics:
     \begin{enumerate}
         \item Release Year (Year the song was released)
         \item Duration (length of song in seconds)
@@ -165,7 +166,6 @@ Here are the descriptors of variables for the two datasets.
         \item Duration
         \item Energy
         \item Instrumentalness
-        \item Key (The particular grouping of chords and notes in a song) 
         \item Liveness (rating from 0-1 of whether the track was performed live, with 1 representing high confidence the track was performed live)
         \item Loudness (Overall loudness of the track in decibles (dB))
         \item Mode
@@ -179,17 +179,11 @@ Here are the descriptors of variables for the two datasets.
 
 \section{Data Set 1}
 \subsection{Exploratory Data Analysis}
-When observing the variables of the dataset, nearly all of the histograms of values were approximately normal, aside from a few that had a very heavy left tail or right tail skew. Furthermore, this correlation plot can help give us an idea for potential interaction terms, depending on if the single variables are significant by themselves.
+When observing the variables of the dataset, nearly all of the histograms of values were approximately normal, aside from a few that had a very heavy left tail or right tail skew. Furthermore, a correlation plot can help give us an idea for potential interaction terms, depending on if the single variables are significant by themselves.This plot can be seen in the appendix. Beat Strength, Bounciness, and Danceability all have very high correlation values. If those variables end up being significant, it will be interesting to see if/how they interact.
 
-```{r, echo=FALSE}
-Track_features_b <- Track_features[-c(1,3,11)]
-Track_features_b$skipped <- as.numeric(Track_features_b$skipped)
-corrplot(cor(Track_features_b))
-```
-Beat Strength, Bounciness, and Danceability all have very high correlation values. If those variables end up being significant, it will be interesting to see if/how they interact.
 
 \subsection{Model Selection}
-For the first dataset, our response variable, $\textbf{y}$, will be modeled by a $Bernoulli(\theta)$ distribution, where 1 means the track was skipped, and 0 means the track was not skipped. To obtain the variable $\theta$, we will use the logit link, where $logit(\theta) = \eta$, and $\eta = \textbf{x}^T\boldsymbol{\beta}$, where $\textbf{x} \in \textbf{X}$ is the covariate space for $\textbf{Y}$. In other words, we are creating a logistic regression model where $\theta$ is obtained from a linear model. We can write our sampling distribution for$\textbf{y}$ as $[\textbf{y}|\theta]$, and since $\theta$ is dependent upon $\boldsymbol{\beta}$ and $\textbf{x}$, we can write this as $[\textbf{y}|\boldsymbol{\beta},\textbf{x} ]$. 
+For the first dataset, our response variable, $\textbf{y}$, will be modeled by a $Bernoulli(\theta)$ distribution, where 1 means the track was skipped, and 0 means the track was not skipped. To obtain the variable $\theta$, we will use the logit link, where $logit(\theta) = \eta$, and $\eta = \textbf{x}^T\boldsymbol{\beta}$, where $\textbf{x} \in \textbf{X}$ is the covariate space for $\textbf{Y}$. In other words, we are creating a logistic regression model where $\theta$ is obtained from a linear model. We can write our sampling distribution for $\textbf{y}$ as $[\textbf{y}|\theta]$, and since $\theta$ is dependent upon $\boldsymbol{\beta}$ and $\textbf{x}$, we can write this as $[\textbf{y}|\boldsymbol{\beta},\textbf{x} ]$. 
 
 What we really want is to estimate the values of the coefficients $\boldsymbol{\beta}$ for each of the variables to find out how they impact whether or not a track is skipped. In order to form a posterior estimate for $\boldsymbol{\beta}$, we must specify a prior. We assume little knowledge about each variable's effect, so we propose a weakly informative prior for $[\boldsymbol{\beta}]$: Using recommendations from Gelman, Jakulin, Pittau, and Su [7], we use a Cauchy(0,2.5) prior for each variable. Furthermore, we centered all the variables and then scaled them to have the same standard deviation, so that no variable could have a disproportionate effect on the outcome, and thus have better interpretability. Now that we have a prior model $[\boldsymbol{\beta}]$ and sampling model $[\textbf{y}|\theta]$,we can use all $\textbf{y}_i \in \textbf{Y}$ to calculate the posterior $[\boldsymbol{\beta}|\textbf{Y}, \textbf{X}]$ using Baye's Theorem and proportionality. This will not be done by hand. Instead, using the rstanarm package, Rstudio will compute the posterior and draw MCMC samples from the $[\boldsymbol{\beta}|\textbf{Y}, \textbf{X}]$. In this way we will obtain estimates for the values of $\beta_0, \beta_1,...,\beta_k \in \boldsymbol{\beta}$.
 
@@ -245,7 +239,7 @@ grid.arrange(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,g11,  nrow=2)
 ```
 
 
-\subsection{Posterior Estimates}
+\subsection{Posterior Check and Estimate}
 ```{r, echo=FALSE}
 set.seed(2)
 a <- sample.int(length(Track_features$track_id), 5000)
@@ -255,7 +249,7 @@ Track_features_a <- Track_features_a[-c(2)]
 ```
 
 
-```{r, echo=FALSE, cache=TRUE}
+```{r, echo=FALSE}
 seed <- 1
 posterior1 <- stan_glm(skipped ~ ., data = Track_features_a,
                  family = binomial(link = "logit"), 
@@ -264,16 +258,16 @@ posterior1 <- stan_glm(skipped ~ ., data = Track_features_a,
                  refresh = 0)
 ```
 
-```{r, echo=FALSE, cache=TRUE, results='hide'}
+```{r, echo=FALSE, results='hide'}
 POST1 <- mcmc_areas(as.matrix(posterior1), prob = 0.95, prob_outer = 1)
 round(posterior_interval(posterior1, prob = 0.95), 3)
 ```
 
-```{r, echo=FALSE, message=FALSE, results='hide', cache=TRUE}
+```{r, echo=FALSE, message=FALSE, results='hide'}
 (loo1 <- loo(posterior1, save_psis = TRUE))
 ```
 
-```{r,  echo=FALSE, message=FALSE, results='hide', cache=TRUE}
+```{r,  echo=FALSE, message=FALSE, results='hide'}
 posterior0 <- stan_glm(skipped ~ 1, data = Track_features_a,
                  family = binomial(link = "logit"), 
                  prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
@@ -284,7 +278,7 @@ rstanarm::loo_compare(loo0, loo1)
 ```
 After running the rstanarm function and including all of the variables, we see that there is only variable whose 95% confidence interval does not include 0. That variable is duration, and when calculating the 'leave-one-out' cross-validation information criterion (looic), we see that this model barely has a slightly lower value (6366) than the looic of a baseline model (6373) with no predictors.To attempt to find the best model, we will drop all variables that were not deemed significant at a 95% confidence interval (included 0 in their posterior interval), and rerun the model. In this case, 'duration' is the only variable remaining.
 
-```{r, echo=FALSE, results='hide', cache=TRUE}
+```{r, echo=FALSE, results='hide'}
 posterior2 <- stan_glm(skipped ~ duration, data = Track_features_a,
                  family = binomial(link = "logit"), 
                  prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
@@ -294,19 +288,14 @@ POST2 <- mcmc_areas(as.matrix(posterior2), prob = 0.95, prob_outer = 1)
 round(coef(posterior2), 3)
 round(posterior_interval(posterior2, prob = 0.95), 3)
 ```
+
 ```{r,results='hide', message=FALSE, cache=TRUE, echo=FALSE}
 (loo2 <- loo(posterior2, save_psis = TRUE))
 rstanarm::loo_compare(loo0, loo2)
 ```
 
 
-```{r, message=FALSE, fig.show='hide', results='hide', cache=TRUE, echo=FALSE}
-matrix2<-as.matrix(posterior2)
-trace2 <- plot(matrix2[,2], type="l")
-ACF2 <- acf(matrix2[,2])
-```
-
-This model proved to be better, with a looic value of 6358. To ensure that the MCMC samples created from the stan_glm function converged and mixed well, a traceplot and ACF plot confirmed that they indeed did converge and mix well (See appendix for graphs). To calculate our posterior predictive accuracy, we used the following method. If the posterior probability of a track being skipped is greater or equal to $0.5$, then we would predict that observation to have a value of 1 (and similarly for less than $0.5$). For each observation, we can compare the posterior prediction to the actual observed value. The proportion of times we correctly predict an individual (i.e. [prediction = 0 and observation = 0] or [prediction = 1 and observation = 1]) is our classification accuracy. In our case, the posterior classification accuracy is 0.67. While we would really want to also calculate the estimated accuracy on "unseen" data, or data that doesn't actually affect this model, because our number of observations is so large (even using a sample), we would expect the value to be the same when using a LOOCV, and this is indeed true: the value is still 0.67.
+The model with only "duration" as a variable  proved to be better, with a looic value of 6358. To ensure that the MCMC samples created from the stan_glm function converged and mixed well, a traceplot and ACF plot confirmed that they indeed did converge and mix well (See appendix for graphs). To calculate our posterior predictive accuracy, we used the following method. If the posterior probability of a track being skipped is greater or equal to $0.5$, then we would predict that observation to have a value of 1 (and similarly for less than $0.5$). For each observation, we can compare the posterior prediction to the actual observed value. The proportion of times we correctly predict an individual (i.e. [prediction = 0 and observation = 0] or [prediction = 1 and observation = 1]) is our classification accuracy. In our case, the posterior classification accuracy is 0.67. While we would really want to also calculate the estimated accuracy on "unseen" data, or data that doesn't actually affect this model, because our number of observations is so large (even using a sample), we would expect the value to be the same when using a LOOCV, and this is indeed true: the value is still 0.67.
 
 ```{r, echo=FALSE, message=FALSE, cache=TRUE}
 preds2 <- posterior_linpred(posterior2, transform = TRUE)
@@ -397,13 +386,15 @@ spotify2$mode <- as.numeric(spotify2$mode)
 spotify2$time_signature <- as.numeric(spotify2$time_signature)
 ```
 
+We have also included a correlation plot for the second data set. There were not any apparent correlations between variables aside from a possible correlation between loudness and energy. And a possible negative correlation bewteen energy and acousticness.
 
-```{r, echo=FALSE}
-corrplot(cor(spotify2))
-```
 
 \subsection{Model Selection}
 We will use the exact same procedure that was used for the first data set to obtain posterior estimates for $\boldsymbol{\beta}$, as well as create a model of best fit.
+
+Before our model selection, we saw that the distribution of the “time_signature” factors in the posterior mean graphs were centered around zero with disproportionately high degrees of deviation relative to the other variables. Therefore, we omitted “time_signature” from our full model before beginning our model selection process. In addition, this decision was fueled by the need to save computational costs, as running LOOIC values for many models is very time expensive. To begin our modeling selection process, we used a backwards selection process where we systematically omitted one of the 11 variables from the full model. We then compared the full model (with all variables included) and the other models (each with one variable removed) by using their LOOIC (leave one out information criterion) values. Using the LOOIC produces values that can be used to compare models to find which has the highest strength of explanation for the given response variable. Whichever model produced the lowest LOOIC compared to the other models and the full model then became the new full model. Using this process, we first omitted the variable “energy.” Now using this model (with only energy omitted) as the full model, we repeated the steps outlined above and found that this new full model had the lowest LOO value. 
+	Once we had our full model, we wanted to test for possible interaction terms. The interaction terms in question were “valence x mode”, “duration x danceability” and “acousticness x liveness”. We tested the valence and mode interaction because a minor mode is often associated with a “sad” sound, so we wanted to explore if there is an association with minor key and a lower perceived value of positivity (lower valence). We tested the duration and danceability interaction because we wanted to explore if more “danceable” songs had a tendency to be longer or shorter songs. We tested the acousticness and liveness interaction because we believed that the more likely the song was performed live, the less likely a song would be electronic-based (it would probably tend to be more acoustic). We repeated the steps outlined above, comparing the LOO value of the full model that included the interaction terms with the value of the full model without the interaction terms. We found that the full model that included the interaction terms had a lower LOO value so we adopted it as our new full-model. After looking at the posterior mean distributions of the variables for this model, however, we found that the interaction term between mode and valence seemed to be distributed around zero. We proceeded further and used the LOO comparison method and compared the full model with all 3 interaction terms and the full model with all interaction terms excluding mode x valence. After this comparison, we found that the full model with all interaction terms excluding mode*valence had the lower LOO value, so we adopted this as our final model.
+
 
 ```{r, cache = TRUE, echo = FALSE, message=FALSE}
 seed=1
@@ -423,13 +414,13 @@ round(posterior_interval(posterior3, prob = 0.90), 3)
 ```
 
 
-```{r, cache = T, results='hide', fig.show='hide'}
+```{r, cache = T, results='hide', message = FALSE, fig.show='hide', echo=FALSE}
 (loo3 <- loo(posterior3, save_psis = TRUE))
 ```
 
 
 
-```{r, cache = T, echo=FALSE}
+```{r, cache = T, echo=FALSE, results='hide'}
 posterior4 <- stan_glm(target ~ 1, data = spotify1,
                  family = binomial(link = "logit"), 
                  prior = normal(0,1), prior_intercept = normal(0,1),
@@ -439,7 +430,7 @@ posterior4 <- stan_glm(target ~ 1, data = spotify1,
 rstanarm::loo_compare(loo3, loo4)
 ```
 
-```{r, cache=TRUE}
+```{r, cache=TRUE, echo=FALSE}
 posterior4.1 <- stan_glm(target ~ danceability+ duration_ms+ energy+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence, data = spotify1,
                 family = binomial(link = "logit"), 
                 prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
@@ -502,7 +493,7 @@ posterior4.full <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ en
                 refresh = 0)
 ```
 
-```{r, cache=TRUE, message = FALSE, results='hide'}
+```{r, cache=TRUE, message = FALSE, results='hide', fig.show='hide', echo=FALSE}
 (loo4.1 <- loo(posterior4.1, save_psis = T))
 (loo4.2 <- loo(posterior4.2, save_psis = T))
 (loo4.3 <- loo(posterior4.3, save_psis = T))
@@ -517,12 +508,12 @@ posterior4.full <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ en
 (loo4.full <- loo(posterior4.full, save_psis = T))
 ```
 
-```{r, cache=TRUE, results='hide'}
+```{r, cache=TRUE, results='hide', fig.show='hide', echo=FALSE}
 rstanarm::loo_compare(loo4.1, loo4.2, loo4.3, loo4.4, loo4.5, loo4.6, loo4.7, loo4.8, loo4.9, loo4.10, loo4.11, loo4.full)
 ```
 
 
-```{r, cache=TRUE}
+```{r, cache=TRUE, echo=FALSE}
 posterior5.1 <- stan_glm(target ~ danceability+ duration_ms+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence, data = spotify1,
                 family = binomial(link = "logit"), 
                 prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
@@ -581,7 +572,7 @@ posterior5.full <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ in
                 refresh = 0)
 ```
 
-```{r, cache=TRUE, message = FALSE, results='hide'}
+```{r, cache=TRUE, message = FALSE, results='hide', echo=FALSE}
 (loo5.1 <- loo(posterior5.1, save_psis = T))
 (loo5.2 <- loo(posterior5.2, save_psis = T))
 (loo5.3 <- loo(posterior5.3, save_psis = T))
@@ -595,11 +586,11 @@ posterior5.full <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ in
 (loo5.full <- loo(posterior5.full, save_psis = T))
 ```
 
-```{r, cache=TRUE, results='hide'}
+```{r, cache=TRUE, results='hide', echo=FALSE}
 rstanarm::loo_compare(loo5.1, loo5.2, loo5.3, loo5.4, loo5.5, loo5.6, loo5.7, loo5.8, loo5.9, loo5.10, loo5.full)
 ```
 
-```{r, cache=TRUE, results='hide'}
+```{r, cache=TRUE, results='hide', echo=FALSE}
 posterior5.interaction <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence + valence*mode+ duration_ms*danceability+ acousticness*liveness, data = spotify1,
                 family = binomial(link = "logit"), 
                 prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
@@ -609,12 +600,12 @@ posterior5.interaction <- stan_glm(target ~ acousticness+ danceability+ duration
 (loo5.interaction <- loo(posterior5.interaction, save_psis = T))
 ```
 
-```{r, cache=TRUE,results='hide'}
+```{r, cache=TRUE,results='hide', echo=FALSE}
 rstanarm::loo_compare(loo5.interaction, loo5.full)
 ```
 
 
-```{r, cache=TRUE, results='hide'}
+```{r, cache=TRUE, results='hide', echo=FALSE}
 posterior5.interaction2 <- stan_glm(target ~ acousticness+ danceability+ duration_ms+ instrumentalness+ liveness+ loudness+ mode+ speechiness+ tempo+ valence + duration_ms*danceability+ acousticness*liveness, data = spotify1,
                 family = binomial(link = "logit"), 
                 prior = cauchy(0,2.5), prior_intercept = cauchy(0,2.5),
@@ -624,85 +615,84 @@ posterior5.interaction2 <- stan_glm(target ~ acousticness+ danceability+ duratio
 (loo5.interaction2 <- loo(posterior5.interaction2, save_psis = T))
 ```
 
-```{r, cache=TRUE, results='hide'}
+```{r, cache=TRUE, results='hide', echo=FALSE}
 rstanarm::loo_compare(loo5.interaction, loo5.interaction2)
 ```
 
-```{r, cache = T, echo=FALSE}
-POST5 <- mcmc_areas(as.matrix(posterior5.interaction2), prob = 0.90, prob_outer = 1)
+```{r, cache = T, echo=FALSE, results='hide', fig.show='hide'}
+POST5 <- mcmc_areas(as.matrix(posterior5.interaction2), prob = 0.95, prob_outer = 1)
 round(coef(posterior5.interaction2), 3)
-round(posterior_interval(posterior5.interaction2, prob = 0.90), 3)
+round(posterior_interval(posterior5.interaction2, prob = 0.95), 3)
 ```
-To calculate our posterior predictive accuracy, we used the following method. If the posterior probability of the song being liked for an particular song is greater or equal to $0.5$, then we would predict that that song to have a value of 1 (and similarly for less than $0.5$). For each observation, we can compare the posterior prediction to the actual observed value. The proportion of times we correctly predict an individual (i.e. [prediction = 0 and observation = 0] or [prediction = 1 and observation = 1]) is our classification accuracy.
 
+\subsection{Posterior Check and Estimate}
 
-```{r, echo=FALSE, message=FALSE}
+```{r, echo=FALSE, message=FALSE, results='hide'}
 preds5 <- posterior_linpred(posterior5.interaction2, transform = TRUE)
 pred5 <- colMeans(preds5)
 ```
 
-```{r, echo=FALSE, cache = TRUE}
+```{r, echo=FALSE, cache = TRUE, results='hide'}
 pr5 <- as.integer(pred5 >= 0.5)
-# have the students calculate this themselves?
 round(mean(xor(pr5,as.integer(spotify1$target == 0))),3)
 ```
 
-```{r, cache = TRUE, echo=FALSE}
+```{r, cache = TRUE, echo=FALSE, results='hide'}
 ploo5 = E_loo(preds5, loo5.interaction2$psis_object, type="mean", log_ratios = -log_lik(posterior5.interaction2))$value
 round(mean(xor(ploo5>0.5,as.integer(spotify1$target==0))),3)
 ```
 
-```{r, cache = TRUE, echo=FALSE}
-#acousticness
-matrix5 <- as.matrix(posterior5.interaction2)
-trace5.acoust <- plot(matrix5[,2], type="l")
-ACF5.acoust <- acf(matrix5[,2])
 
-#danceability
-trace5.dance <- plot(matrix5[,3], type="l")
-ACF5.dance <- acf(matrix5[,3])
+To ensure that the MCMC samples created from the stan_glm function converged and mixed well for each variable, traceplots and ACF plots confirmed that they indeed did converge and mix well (See appendix for graphs). To calculate our posterior predictive accuracy, we used the same method used for data set 1 [see above]. If the posterior probability of the song being liked for an particular song is greater or equal to $0.5$, then we would predict that that song to have a value of 1 (and similarly for less than $0.5$). For each observation, we can compare the posterior prediction to the actual observed value. The proportion of times we correctly predict an individual (i.e. [prediction = 0 and observation = 0] or [prediction = 1 and observation = 1]) is our classification accuracy In our case, the posterior classification accuracy is 0.688. We would really want to calculate the estimated accuracy on "unseen" data, or data that doesn't actually affect this model, but using LOOCV, this value is nearly the same: the value is 0.683.
 
-#duration
-trace5.duration <- plot(matrix5[,4], type="l")
-ACF5.duration <- acf(matrix5[,4])
 
-#instrumentalness
-trace5.instru <- plot(matrix5[,5], type="l")
-ACF5.instru <- acf(matrix5[,5])
+\subsection{Results}
+Our resulting model found from the LOOIC model selection is as follows: 
+$$
+logit(\theta) = \beta_0+acousticness\beta_1 + danceability\beta_2+ duration\beta_3+ 
+$$
+$$
+instrumentalness\beta_4+ liveness\beta_5+loudness\beta_6+mode1\beta_7+ speechiness\beta_8+tempo\beta_9
+$$
+$$
++valence\beta_{10}+danceability \cdot duration\beta_{11}+acousticness\cdot liveness\beta_{12}
+$$
 
-#liveness
-trace5.liveness <- plot(matrix5[,5], type="l")
-ACF5.liveness <- acf(matrix5[,5])
+$\beta_1 = -0.348$ with a confidence interval of [-0.473, -0.223],
 
-#loudness
-trace5.loudness <- plot(matrix5[,7], type="l")
-ACF5.loudness <- acf(matrix5[,7])
+$\beta_2 = 0.328$ with a confidence interval of [0.218,  0.448],
 
-#mode
-trace5.mode <- plot(matrix5[,8], type="l")
-ACF5.mode <- acf(matrix5[,8])
+$\beta_3 = 0.353$ with a confidence interval of [0.218,  0.489],
 
-#speechness
-trace5.speech <- plot(matrix5[,9], type="l")
-ACF5.speech <- acf(matrix5[,9])
+$\beta_4 = 0.365$ with a confidence interval of [0.249,  0.483],
 
-#tempo
-trace5.tempo <- plot(matrix5[,10], type="l")
-ACF5.tempo <- acf(matrix5[,10])
+$\beta_5 = 0.136$ with a confidence interval of [0.038,  0.238],
 
-#valence
-trace5.valence <- plot(matrix5[,11], type="l")
-ACF5.valence <- acf(matrix5[,11])
+$\beta_6 = -0.409$ with a confidence interval of [-0.547, -0.280],
 
-#interaction
-trace5.duration.dance <- plot(matrix5[,12], type="l")
-ACF5.duration.dance <- acf(matrix5[,12])
+$\beta_7 = -0.167$ with a confidence interval of [-0.370,  0.031],
 
-#interaction2
-trace5.acoust.live <- plot(matrix5[,13], type="l")
-trace5.acoust.live <- acf(matrix5[,13])
+$\beta_8 = 0.364$ with a confidence interval of [0.260,  0.474],
 
-```
+$\beta_9 = 0.088$ with a confidence interval of [-0.012,  0.187],
+
+$\beta_{10} = 0.189$ with a confidence interval of [0.080,  0.299],
+
+$\beta_{11} = 0.374$ with a confidence interval of [ 0.265,  0.492],
+
+$\beta_{12} = 0.218$ with a confidence interval of [ 0.099,  0.340]
+
+
+
+Using similar logic as the first data set, we will not provide literal descriptions of the variables but explain their significance and general effect on the response variable "target." To begin, all variables included in our best fit model proved to be significant using the 95% confidence interval except for "tempo" and "mode." The variables that had a positive effect on the outcome (a higher probability of a song being "liked") within our best-fit model were danceability, duration, instrumentalness, liveness, speechiness, valence, danceability x duration, and acousticness x liveness. In essence, this means that if a song is longer, is more "danceable," has less vocals, is performed in a live setting, has more spoken words, is more "positive" in nature, then that song has a higher probability of being "liked" by this individual according to our model. In addition, the interaction effects indicate that a higher danceability value corresponds to a higher effect of duration on the probability of a given song being "liked" (and vice versa), and, likewise, a higher level of acousticness corresponds to a higher effect of liveness on the probability of a given song being "liked" (and vice versa). Furthermore, the variables that had a negative effect on the outcome (a lower probability of a song being "liked") within our best-fit model were acousticness and loudness. In essence, this means that if a given song is more acoustic or louder, then that song has a lower probability of being "liked" by this individual according to our model.
+
+
+\subsection{Conclusions}
+After an inconclusive result with the first analysis, the narrowness of the second analysis allowed for a higher level of insight. The systematic process of comparing the LOO values of different models that omitted different variables allowed us to eliminate insignificant variables such as “energy”. Our final model suggested particular characteristics of a given song that would increase or decrease the likelihood of this specific individual “liking” the song. While the predictive power (about 68%), was not as high as we would’ve ideally wanted, the value is still higher than 50%, so it is more informative than simply guessing whether this individual will like a song or not. Ultimately this model could be used by this individual to predict whether he will like a given song (given its characteristics), or it could purely be informative for this individual when reflecting on his personal tastes. Furthermore, given that this individual stated that his taste in music seems to span across multiple genres and seems “inconsistent”, our model could be used by artists wanting to entice listeners outside of their usual following. An individual like the one featured in our analysis proves to be a prime example of someone that could be interested in listening to new types of music. By keeping in mind the effects of the variables in the model, a musician/musicians can tailor his/her/their songs to increase their chances of gaining popularity in the musical industry. 
+
+
+
+\subsection{Sources}
 
 [1] Betancourt, Michael. How the Shape of a Weakly Informative Prior Affects Inferences,                        mc-stan.org/users/documentation/case-studies/weakly_informative_shapes.html. 
 
@@ -717,4 +707,81 @@ trace5.acoust.live <- acf(matrix5[,13])
 [6] Vehtari, Aki, et al. “Bayesian Logistic Regression with Rstanarm.” Github, 4 Dec. 2019, avehtari.github.io/modelselection/diabetes.html. 
 
 [7] Andrew Gelman, Aleks Jakulin, Maria Grazia Pittau, Yu-Sung Su. "A weakly informative default prior distributionfor logistic and other regression models." The Annals of Applied Statistics, 2(4) 1360-1383 December 2008, https://projecteuclid.org/journals/annals-of-applied-statistics/volume-2/issue-4/A-weakly-informative-default-prior-distribution/10.1214/08-AOAS191.full?tab=ArticleLink
+
+\newpage
+\section{Appendix}
+
+Correlation plot for data set 1.
+```{r, echo=FALSE}
+Track_features_b <- Track_features[-c(1,3,11)]
+Track_features_b$skipped <- as.numeric(Track_features_b$skipped)
+corrplot(cor(Track_features_b))
+```
+
+Correlation plot for data set 2.
+```{r, echo=FALSE}
+corrplot(cor(spotify2))
+```
+
+ACF and Traceplots for the duration variable in data set 1
+```{r, message=FALSE, cache=TRUE, echo=FALSE}
+matrix2<-as.matrix(posterior2)
+trace2 <- plot(matrix2[,2], type="l")
+ACF2 <- acf(matrix2[,2])
+```
+
+
+ACF and Traceplots for the all variables in final model in data set 2
+```{r, cache = TRUE, echo=FALSE}
+print("acousticness")
+matrix5 <- as.matrix(posterior5.interaction2)
+trace5.acoust <- plot(matrix5[,2], type="l")
+ACF5.acoust <- acf(matrix5[,2])
+
+print("danceability")
+trace5.dance <- plot(matrix5[,3], type="l")
+ACF5.dance <- acf(matrix5[,3])
+
+print("duration")
+trace5.duration <- plot(matrix5[,4], type="l")
+ACF5.duration <- acf(matrix5[,4])
+
+print("instrumentalness")
+trace5.instru <- plot(matrix5[,5], type="l")
+ACF5.instru <- acf(matrix5[,5])
+
+print("liveness")
+trace5.liveness <- plot(matrix5[,5], type="l")
+ACF5.liveness <- acf(matrix5[,5])
+
+print("loudness")
+trace5.loudness <- plot(matrix5[,7], type="l")
+ACF5.loudness <- acf(matrix5[,7])
+
+print("mode")
+trace5.mode <- plot(matrix5[,8], type="l")
+ACF5.mode <- acf(matrix5[,8])
+
+print("speechness")
+trace5.speech <- plot(matrix5[,9], type="l")
+ACF5.speech <- acf(matrix5[,9])
+
+print("tempo")
+trace5.tempo <- plot(matrix5[,10], type="l")
+ACF5.tempo <- acf(matrix5[,10])
+
+print("valence")
+trace5.valence <- plot(matrix5[,11], type="l")
+ACF5.valence <- acf(matrix5[,11])
+
+print("interaction")
+trace5.duration.dance <- plot(matrix5[,12], type="l")
+ACF5.duration.dance <- acf(matrix5[,12])
+
+print("interaction2")
+trace5.acoust.live <- plot(matrix5[,13], type="l")
+ACF5.acoust.live <- acf(matrix5[,13])
+
+```
+
 
